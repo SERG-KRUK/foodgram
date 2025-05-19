@@ -1,5 +1,33 @@
-version: '3.3'
+# version: '3.3'
+
+volumes:
+    pg_data_production:
+    data_volume:
+
 services:
+
+  db:
+    image: postgres:13.0-alpine
+    environment:
+      POSTGRES_DB: foodgram
+      POSTGRES_USER: foodgram_user
+      POSTGRES_PASSWORD: foodgram_password
+    volumes:
+      - pg_data_production:/var/lib/postgresql/data/
+    env_file:
+      - ./.env
+
+  backend:
+    build: ../backend
+    restart: always
+    volumes:
+      - data_volume:/app/data/
+      - ./media:/app/media/
+      - ./collected_static:/app/collected_static
+    depends_on:
+      - db
+    env_file:
+      - ./.env
 
   frontend:
     container_name: foodgram-front
@@ -8,10 +36,18 @@ services:
       - ../frontend/:/app/result_build/
   nginx:
     container_name: foodgram-proxy
-    image: nginx:1.25.4-alpine
+    build: ../infra
     ports:
-      - "80:80"
+      - "8000:80"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      - ../frontend/build:/usr/share/nginx/html/
-      - ../docs/:/usr/share/nginx/html/api/docs/
+      - ./collected_static:/var/html/static/
+      - ./collected_static/admin:/var/html/static/admin/
+      - ./collected_static/rest_framework:/var/html/static/rest_framework/
+      - ./media:/var/html/media/
+      - ../frontend/build:/usr/share/nginx/html
+      - ../frontend/build/static:/var/html/static 
+
+    depends_on:
+      - backend
+      - frontend
