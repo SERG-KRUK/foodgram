@@ -1,4 +1,10 @@
+"""
+Настройки проекта фудграм.
+"""
+
+
 import os
+
 from pathlib import Path
 from django.contrib.admin import AdminSite
 
