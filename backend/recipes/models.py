@@ -21,8 +21,7 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ['username']
 
     class Meta:
-        """Мета-класс для модели User."""
-        
+        """Мета-класс для модели User."""        
         ordering = ['id']
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
@@ -40,7 +39,7 @@ class Tag(models.Model):
 
     class Meta:
         """Мета-класс для модели Tag."""
-        
+
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
 
@@ -57,7 +56,7 @@ class Ingredient(models.Model):
 
     class Meta:
         """Мета-класс для модели Ingredient."""
-        
+
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
         constraints = [
@@ -98,7 +97,7 @@ class Recipe(models.Model):
 
     class Meta:
         """Мета-класс для модели Recipe."""
-        
+
         ordering = ['-pub_date']
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
@@ -131,7 +130,7 @@ class RecipeIngredient(models.Model):
 
     class Meta:
         """Мета-класс для модели RecipeIngredient."""
-        
+
         verbose_name = 'Ингредиент в рецепте'
         verbose_name_plural = 'Ингредиенты в рецептах'
         constraints = [
@@ -148,7 +147,7 @@ class RecipeIngredient(models.Model):
 
 class Favorite(models.Model):
     """Модель для хранения избранных рецептов пользователей."""
-    
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -179,7 +178,7 @@ class Favorite(models.Model):
 
 class ShoppingCart(models.Model):
     """Модель корзины покупок пользователя."""
-    
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -210,7 +209,7 @@ class ShoppingCart(models.Model):
 
 class Subscription(models.Model):
     """Модель подписки пользователей друг на друга."""
-    
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -241,7 +240,7 @@ class Subscription(models.Model):
 
 def generate_hash() -> str:
     """Генерирует случайную строку для коротких ссылок.
-    
+
     Returns:
         Случайная строка длиной от 15 до 32 символов.
     """
@@ -252,7 +251,7 @@ def generate_hash() -> str:
 
 class LinkMapped(models.Model):
     """Модель для хранения сокращенных ссылок."""
-    
+
     url_hash = models.CharField(max_length=32, unique=True)
     original_url = models.CharField(max_length=32)
 
