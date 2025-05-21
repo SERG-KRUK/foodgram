@@ -1,3 +1,5 @@
+"""Модуль для загрузки ингридиентов по умолчанию."""
+
 from django.core.management.base import BaseCommand
 import csv
 import json
@@ -8,6 +10,8 @@ from django.conf import settings
 
 
 class Command(BaseCommand):
+    """Команда для загрузки ингридиентов по умолчанию."""
+
     help = 'Load ingredients from CSV or JSON file'
 
     def handle(self, *args, **options):

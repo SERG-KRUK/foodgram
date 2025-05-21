@@ -3,8 +3,10 @@
 from django.core.management.base import BaseCommand
 from recipes.models import Tag
 
+
 class Command(BaseCommand):
     """Команда для загрузки стандартных тегов в базу данных."""
+
     help = 'Load default tags'
 
     def handle(self, *args, **options):
