@@ -1,7 +1,4 @@
-"""
-This module defines the URL routing for the recipes application.
-"""
-
+"""This module defines the URL routing for the recipes application."""
 
 from django.conf import settings
 from django.conf.urls.static import static

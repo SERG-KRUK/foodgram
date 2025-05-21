@@ -1,7 +1,4 @@
-"""
-Основные урлы приложения фудграм.
-"""
-
+"""Основные урлы приложения фудграм."""
 
 from django.conf import settings
 from django.conf.urls.static import static
