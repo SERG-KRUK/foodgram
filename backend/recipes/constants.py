@@ -4,6 +4,10 @@ MAX_LENGTH_USERNAME = 150
 MAX_LENGTH_EMAIL = 254
 MAX_LENGTH_CODE = 40
 
+"""
+Константы для проекта.
+"""
+
 # Регулярные выражения
 USERNAME_REGEX = r'^[\w.@+-]+\Z'
 SLUG_REGEX = r'^[-a-zA-Z0-9_]+$'

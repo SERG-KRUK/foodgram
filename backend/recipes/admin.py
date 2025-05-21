@@ -2,6 +2,7 @@
 
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.admin import display
 
 from .models import (
     Favorite,
@@ -46,7 +47,7 @@ class RecipeAdmin(admin.ModelAdmin):
     inlines = [RecipeIngredientInline]
     exclude = ('ingredients',)
 
-    @admin.display(description='В избранном')
+    @display(description='В избранном')
     def favorites_count(self, obj):
         """Возвращает количество добавлений рецепта в избранное."""
         return obj.favorites.count()
@@ -68,7 +69,7 @@ class TagAdmin(admin.ModelAdmin):
     list_display = ('name', 'color_code', 'slug')
     search_fields = ('name', 'slug')
 
-    @admin.display(description='Цвет (HEX)')
+    @display(description='Цвет (HEX)')
     def color_code(self, obj):
         """Возвращает HEX-код цвета тега."""
         return obj.color

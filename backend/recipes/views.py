@@ -1,5 +1,4 @@
 """View-классы для обработки запросов API приложения recipes."""
-
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -9,7 +8,7 @@ from rest_framework.parsers import JSONParser
 from rest_framework.permissions import (
     AllowAny,
     IsAuthenticated,
-    IsAuthenticatedOrReadOnly
+    IsAuthenticatedOrReadOnly,
 )
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -23,7 +22,7 @@ from .models import (
     Subscription,
     Tag,
     User,
-    generate_hash
+    generate_hash,
 )
 from .permissions import IsAdmin, IsAuthorOrReadOnly
 from .serializers import (
@@ -35,7 +34,7 @@ from .serializers import (
     SubscriptionSerializer,
     TagSerializer,
     UserCreateSerializer,
-    UserSerializer
+    UserSerializer,
 )
 
 

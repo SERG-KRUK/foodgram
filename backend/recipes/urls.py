@@ -6,6 +6,10 @@ from rest_framework.routers import DefaultRouter
 from .views import (AdminIngredientViewSet, AdminTagViewSet, IngredientViewSet,
                     RecipeViewSet, TagViewSet, UserViewSet)
 
+"""
+This module defines the URL routing for the recipes application.
+"""
+
 router = DefaultRouter()
 router.register('users', UserViewSet, basename='users')
 router.register('tags', TagViewSet, basename='tags')
@@ -21,7 +25,7 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
-    urlpatterns += static(settings.STATIC_URL,
-                          document_root=settings.STATIC_ROOT)
-    urlpatterns += static(settings.MEDIA_URL,
-                          document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(
+        settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(
+        settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

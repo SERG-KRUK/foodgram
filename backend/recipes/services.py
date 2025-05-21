@@ -1,9 +1,8 @@
 from django.core.mail import send_mail
 from django.conf import settings
 
-
 def send_confirmation_email(email, confirmation_code):
-    """send code conf"""
+    """Send a confirmation email with the provided confirmation code."""
     send_mail(
         'Confirmation code',
         f'Your code: {confirmation_code}',
