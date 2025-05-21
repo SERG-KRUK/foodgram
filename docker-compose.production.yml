@@ -31,9 +31,9 @@ services:
       - 8000:80
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      - ./collected_static:/var/html/static/
+      - ./collected_static:/var/html/django_static/
       - ./collected_static/admin:/var/html/static/admin/
       - ./collected_static/rest_framework:/var/html/static/rest_framework/
       - media:/var/html/media/
       - ../frontend/build:/usr/share/nginx/html
-      - ../frontend/build/static:/var/html/static 
+      - ../frontend/build/static:/var/html/static
