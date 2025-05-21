@@ -4,14 +4,15 @@ import uuid
 
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
+from rest_framework import serializers
 from djoser.serializers import (
     UserCreateSerializer as BaseUserCreateSerializer,
     UserSerializer as BaseUserSerializer,
 )
-from rest_framework import serializers
 
 from .models import (
-    Ingredient, LinkMapped, Recipe, RecipeIngredient, Subscription, Tag)
+    Ingredient, LinkMapped, Recipe, RecipeIngredient, Subscription, Tag
+)
 
 
 User = get_user_model()

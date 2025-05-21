@@ -1,8 +1,8 @@
 """Административная панель для управления моделями приложения recipes."""
 
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.admin import display
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 from .models import (
     Favorite,

@@ -7,13 +7,13 @@ from .constants import USERNAME_REGEX
 
 
 def validate_year_not_future(value):
-    """Checks that the year is not in the future."""
+    """Ensure that the year is not in the future."""
     if value > datetime.now().year:
         raise ValidationError("Год создания не может быть больше текущего.")
 
 
 def validate_username(value):
-    """Validates the username."""
+    """Validate the username."""
     if value.lower() == 'me':
         raise ValidationError('Имя пользователя "me" не разрешено.')
     RegexValidator(
@@ -26,5 +26,6 @@ class UsernameValidationMixin:
     """Mixin for username validation."""
 
     def validate_username(self, username):
+        """Validate the username."""
         validate_username(username)
         return username
