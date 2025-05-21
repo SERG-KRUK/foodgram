@@ -1,4 +1,5 @@
 """Serializers for recipes application."""
+
 import base64
 import uuid
 
@@ -11,7 +12,12 @@ from djoser.serializers import (
 )
 
 from .models import (
-    Ingredient, LinkMapped, Recipe, RecipeIngredient, Subscription, Tag
+    Ingredient,
+    LinkMapped,
+    Recipe,
+    RecipeIngredient,
+    Subscription,
+    Tag,
 )
 
 

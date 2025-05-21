@@ -9,7 +9,7 @@ from random import choice, randint
 
 class User(AbstractUser):
     """Модель пользователя с расширенными полями."""
-    
+
     email = models.EmailField(max_length=254, unique=True)
     username = models.CharField(max_length=150, unique=True)
     first_name = models.CharField(max_length=150)
@@ -22,6 +22,7 @@ class User(AbstractUser):
 
     class Meta:
         """Мета-класс для модели User."""
+        
         ordering = ['id']
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
@@ -29,7 +30,7 @@ class User(AbstractUser):
 
 class Tag(models.Model):
     """Модель тега для рецептов."""
-    
+
     name = models.CharField(max_length=32, unique=True)
     slug = models.SlugField(max_length=32, unique=True, allow_unicode=True)
 
@@ -39,13 +40,14 @@ class Tag(models.Model):
 
     class Meta:
         """Мета-класс для модели Tag."""
+        
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
 
 
 class Ingredient(models.Model):
     """Модель ингредиента для рецептов."""
-    
+
     name = models.CharField(max_length=128)
     measurement_unit = models.CharField(max_length=64)
 
@@ -55,6 +57,7 @@ class Ingredient(models.Model):
 
     class Meta:
         """Мета-класс для модели Ingredient."""
+        
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
         constraints = [
@@ -67,7 +70,7 @@ class Ingredient(models.Model):
 
 class Recipe(models.Model):
     """Основная модель рецепта."""
-    
+
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -95,6 +98,7 @@ class Recipe(models.Model):
 
     class Meta:
         """Мета-класс для модели Recipe."""
+        
         ordering = ['-pub_date']
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
@@ -111,8 +115,8 @@ class Recipe(models.Model):
 
 
 class RecipeIngredient(models.Model):
-    """модель для связи рецептов и ингредиентов с указанием количества."""
-    
+    """Модель для связи рецептов и ингредиентов с указанием количества."""
+
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
@@ -127,6 +131,7 @@ class RecipeIngredient(models.Model):
 
     class Meta:
         """Мета-класс для модели RecipeIngredient."""
+        
         verbose_name = 'Ингредиент в рецепте'
         verbose_name_plural = 'Ингредиенты в рецептах'
         constraints = [
@@ -157,6 +162,7 @@ class Favorite(models.Model):
 
     class Meta:
         """Мета-класс для модели Favorite."""
+
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранные'
         constraints = [
@@ -187,6 +193,7 @@ class ShoppingCart(models.Model):
 
     class Meta:
         """Мета-класс для модели ShoppingCart."""
+
         verbose_name = 'Корзина покупок'
         verbose_name_plural = 'Корзины покупок'
         constraints = [
@@ -217,6 +224,7 @@ class Subscription(models.Model):
 
     class Meta:
         """Мета-класс для модели Subscription."""
+
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
         constraints = [
@@ -260,5 +268,6 @@ class LinkMapped(models.Model):
 
     class Meta:
         """Мета-класс для модели LinkMapped."""
+
         verbose_name = 'Сокращенная ссылка'
         verbose_name_plural = 'Сокращенные ссылки'
