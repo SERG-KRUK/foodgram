@@ -1,12 +1,12 @@
+"""
+Константы для проекта.
+"""
+
 MAX_LENGTH_NAME = 256
 MAX_LENGTH_SLUG = 50
 MAX_LENGTH_USERNAME = 150
 MAX_LENGTH_EMAIL = 254
 MAX_LENGTH_CODE = 40
-
-"""
-Константы для проекта.
-"""
 
 # Регулярные выражения
 USERNAME_REGEX = r'^[\w.@+-]+\Z'

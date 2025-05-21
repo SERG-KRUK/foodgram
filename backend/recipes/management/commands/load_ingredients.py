@@ -15,7 +15,7 @@ class Command(BaseCommand):
     help = 'Load ingredients from CSV or JSON file'
 
     def handle(self, *args, **options):
-        # Пробуем загрузить из CSV
+        """Загружает предустановленные рецепты в базу данных."""
         csv_path = os.path.join(settings.BASE_DIR, 'data', 'ingredients.csv')
         json_path = os.path.join(settings.BASE_DIR, 'data', 'ingredients.json')
 
@@ -28,6 +28,7 @@ class Command(BaseCommand):
                 'Файлы ingredients.csv и ingredients.json не найдены'))
 
     def load_from_csv(self, file_path):
+        """Загружает предустановленные теги в базу данных."""
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 reader = csv.reader(f)
@@ -50,6 +51,7 @@ class Command(BaseCommand):
                 self.style.ERROR(f'Ошибка при загрузке CSV: {str(e)}'))
 
     def load_from_json(self, file_path):
+        """Загружает предустановленные теги в базу данных."""
         with open(file_path, 'r', encoding='utf-8') as f:
             ingredients = json.load(f)
             count = 0
