@@ -1,0 +1,39 @@
+volumes:
+  pg_data_production:
+  static_volume:
+  media:
+
+services:
+  db:
+    image: postgres:13.10
+    env_file: .env
+    volumes:
+      - pg_data_production:/var/lib/postgresql/data
+  backend:
+    image: sergdevops/foodgram_backend
+    env_file: .env
+    depends_on:
+      - db
+    volumes:
+      - static_volume:/backend_static
+      - media:/app/media
+  frontend:
+    image: sergdevops/foodgram_frontend
+    volumes:
+      - ../frontend/:/app/result_build/
+  nginx:
+    image: sergdevops/foodgram_nginx
+    env_file: .env
+    depends_on:
+     - backend
+     - frontend
+    ports:
+      - 8000:80
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./collected_static:/var/html/static/
+      - ./collected_static/admin:/var/html/static/admin/
+      - ./collected_static/rest_framework:/var/html/static/rest_framework/
+      - media:/var/html/media/
+      - ../frontend/build:/usr/share/nginx/html
+      - ../frontend/build/static:/var/html/static 

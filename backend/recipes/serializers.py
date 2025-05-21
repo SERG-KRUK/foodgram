@@ -1,13 +1,13 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from foodgram import settings
 from djoser.serializers import UserCreateSerializer as BaseUserCreateSerializer
 from djoser.serializers import UserSerializer as BaseUserSerializer
+
+from foodgram import settings
 from .models import (Recipe, RecipeIngredient, Tag, Ingredient,
                      Subscription, LinkMapped)
 from django.core.files.base import ContentFile
 import base64
-from rest_framework.reverse import reverse
 import uuid
 
 
@@ -113,7 +113,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     def get_image(self, obj):
         if not obj.image:
             return None
-        return f"{settings.BASE_URL}{obj.image.url}"
+        return obj.image.url
 
     def get_is_favorited(self, obj):
         user = self.context['request'].user

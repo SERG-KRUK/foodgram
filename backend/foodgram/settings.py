@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from datetime import timedelta
+from django.contrib.admin import AdminSite
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -9,11 +9,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', 'default_secret_key')
 
 
-#DEBUG = os.environ.get('DEBUG', 'False') == 'True'
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'True'
 
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'foodgramyandex.ddns.net']
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+
+# ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'foodgramyandex.ddns.net']
 
 
 INSTALLED_APPS = [
@@ -81,12 +82,9 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = DEBUG
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/django/'
 STATIC_ROOT = BASE_DIR / 'collected_static'
 
-# STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-
-# STATIC_ROOT = os.path.join(BASE_DIR, 'collected_static')
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -164,12 +162,11 @@ AUTH_USER_MODEL = 'recipes.User'
 
 
 GRAPH_MODELS = {
-  'app_labels': ["recipes", "users"],
-  'group_models': True,
-  'output': 'er_diagram.png',
+    'app_labels': ["recipes", "users"],
+    'group_models': True,
+    'output': 'er_diagram.png',
 }
-# Internationalization
-# https://docs.djangoproject.com/en/4.2/topics/i18n/
+
 
 LANGUAGE_CODE = 'ru-RU'
 TIME_ZONE = 'Europe/Moscow'
@@ -177,17 +174,13 @@ USE_I18N = True
 USE_L10N = True
 
 
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 ADMIN_SITE_HEADER = "Foodgram Administration"
 ADMIN_SITE_TITLE = "Foodgram Admin Portal"
 ADMIN_INDEX_TITLE = "Welcome to Foodgram Admin"
 
-from django.contrib.admin import AdminSite
+
 AdminSite.site_header = ADMIN_SITE_HEADER
 AdminSite.site_title = ADMIN_SITE_TITLE
 AdminSite.index_title = ADMIN_INDEX_TITLE

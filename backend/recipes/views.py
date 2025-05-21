@@ -1,25 +1,25 @@
-from rest_framework import viewsets, status
-from rest_framework.reverse import reverse
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.permissions import (IsAuthenticated, AllowAny,
-                                        IsAuthenticatedOrReadOnly)
-from django.shortcuts import get_object_or_404, redirect
-from django.http import HttpResponse
-from rest_framework.decorators import api_view
 from django.db.models import Sum
-from django.views.decorators.http import require_GET
-from rest_framework.views import APIView
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect
+from rest_framework import status, viewsets
+from rest_framework.decorators import action, api_view
 from rest_framework.parsers import JSONParser
-from .models import (User, Recipe, RecipeIngredient, Tag, Ingredient,
-                     Favorite, ShoppingCart, Subscription, LinkMapped,
-                     generate_hash)
-from .serializers import (PasswordSerializer, UserCreateSerializer,
-                          UserSerializer, TagSerializer, IngredientSerializer,
-                          RecipeSerializer, RecipeCreateSerializer,
-                          ShortRecipeSerializer, SubscriptionSerializer,
-                          ShortenerSerializer, ShortLinkSerializer)
-from .permissions import IsAuthorOrReadOnly, IsAdmin
+from rest_framework.permissions import (
+    AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
+)
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from .models import (
+    Favorite, Ingredient, Recipe, RecipeIngredient, ShoppingCart,
+    Subscription, Tag, User, generate_hash
+)
+from .permissions import IsAdmin, IsAuthorOrReadOnly
+from .serializers import (
+    PasswordSerializer, RecipeCreateSerializer, RecipeSerializer,
+    ShortRecipeSerializer, SubscriptionSerializer, TagSerializer,
+    UserCreateSerializer, UserSerializer, IngredientSerializer
+)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -294,7 +294,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
             recipe.short_link = generate_hash()
             recipe.save()
         return Response({
-            'short-link': request.build_absolute_uri(f'/s/{recipe.short_link}/')
+            'short-link': request.build_absolute_uri(
+                f'/s/{recipe.short_link}/')
         })
 
 
