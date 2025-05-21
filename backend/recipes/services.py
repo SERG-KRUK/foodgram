@@ -3,6 +3,7 @@ from django.conf import settings
 
 
 def send_confirmation_email(email, confirmation_code):
+    """send code conf"""
     send_mail(
         'Confirmation code',
         f'Your code: {confirmation_code}',

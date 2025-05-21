@@ -25,6 +25,7 @@ class Tag(models.Model):
     slug = models.SlugField(max_length=32, unique=True, allow_unicode=True)
 
     def __str__(self):
+        """Returns string representation of Tag model."""
         return self.name
 
 
@@ -33,6 +34,7 @@ class Ingredient(models.Model):
     measurement_unit = models.CharField(max_length=64)
 
     def __str__(self):
+        """Returns string representation of Ingredient model."""
         return self.name
 
 
@@ -149,8 +151,7 @@ class Subscription(models.Model):
 
 
 def generate_hash() -> str:
-    """Генерирует случайную строку"""
-
+    """Generates a random string."""
     return ''.join(
         choice(string.ascii_letters + string.digits)
         for _ in range(randint(15, 32)))

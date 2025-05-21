@@ -6,20 +6,35 @@ from django.shortcuts import get_object_or_404, redirect
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.parsers import JSONParser
-from rest_framework.permissions import (AllowAny, IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
+from rest_framework.permissions import (
+    AllowAny,
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly
+)
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import (
-    Favorite, Ingredient, Recipe, RecipeIngredient,
-    ShoppingCart, Subscription, Tag, User, generate_hash)
+    Favorite,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    ShoppingCart,
+    Subscription,
+    Tag,
+    User,
+    generate_hash
+)
 from .permissions import IsAdmin, IsAuthorOrReadOnly
 from .serializers import (
-    IngredientSerializer, PasswordSerializer,
-    RecipeCreateSerializer, RecipeSerializer,
-    ShortRecipeSerializer, SubscriptionSerializer,
-    TagSerializer, UserCreateSerializer,
+    IngredientSerializer,
+    PasswordSerializer,
+    RecipeCreateSerializer,
+    RecipeSerializer,
+    ShortRecipeSerializer,
+    SubscriptionSerializer,
+    TagSerializer,
+    UserCreateSerializer,
     UserSerializer
 )
 
@@ -323,7 +338,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
             recipe.short_link = generate_hash()
             recipe.save()
         return Response({
-            'short-link': request.build_absolute_uri(f'/s/{recipe.short_link}/')
+            'short-link': request.build_absolute_uri(
+                f'/s/{recipe.short_link}/')
         })
 
 

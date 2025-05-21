@@ -1,16 +1,17 @@
 """Serializers for recipes application."""
-from django.core.files.base import ContentFile
-from django.contrib.auth import get_user_model
-from rest_framework import serializers
-from djoser.serializers import (
-    UserCreateSerializer as BaseUserCreateSerializer,
-    UserSerializer as BaseUserSerializer
-)
 import base64
 import uuid
 
-from .models import (Recipe, RecipeIngredient, Tag,
-                     Ingredient, Subscription, LinkMapped)
+from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
+from djoser.serializers import (
+    UserCreateSerializer as BaseUserCreateSerializer,
+    UserSerializer as BaseUserSerializer,
+)
+from rest_framework import serializers
+
+from .models import (
+    Ingredient, LinkMapped, Recipe, RecipeIngredient, Subscription, Tag)
 
 
 User = get_user_model()
