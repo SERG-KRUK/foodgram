@@ -269,7 +269,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             # Проверка на нулевое количество
             if ingredient['amount'] <= 0:
                 errors.append({
-                    'message': 'Количество ингредиента должно быть целым числом больше 0',
+                    'message': 'Количество ингредиента должно быть больше 0',
                     'ingredient_id': ingredient['id'].id,
                     'field': 'amount'
                 })
