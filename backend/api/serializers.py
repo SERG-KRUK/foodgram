@@ -127,7 +127,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'measurement_unit', 'amount')
 
     def validate_amount(self, value):
-        """Function for validate amount."""
+        """Проверяет пользователя."""
         try:
             if int(value) <= 0:
                 raise serializers.ValidationError(

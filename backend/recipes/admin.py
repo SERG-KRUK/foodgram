@@ -27,7 +27,7 @@ class UserCreationForm(ModelForm):
 
         model = User
         fields = ('email', 'username', 'first_name', 'last_name', 'password')
-        
+
     def clean(self):
         """функция валидации пользователя."""
         cleaned_data = super().clean()
