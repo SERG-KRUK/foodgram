@@ -11,10 +11,36 @@ from random import choice, randint
 class User(AbstractUser):
     """Модель пользователя с расширенными полями."""
 
-    email = models.EmailField(max_length=254, unique=True)
-    username = models.CharField(max_length=150, unique=True)
-    first_name = models.CharField(max_length=150, blank=False)
-    last_name = models.CharField(max_length=150, blank=False)
+    email = models.EmailField(
+        max_length=254,
+        unique=True,
+        verbose_name='Email',
+        help_text='Обязательное поле. Максимум 254 символа.',
+        error_messages={
+            'unique': "Пользователь с таким email уже существует.",
+        }
+    )
+    username = models.CharField(
+        max_length=150,
+        unique=True,
+        verbose_name='Username',
+        help_text='Обязательное поле. Максимум 150 символов. Только буквы',
+        error_messages={
+            'unique': "Пользователь с таким username уже существует.",
+        }
+    )
+    first_name = models.CharField(
+        max_length=150,
+        verbose_name='Имя',
+        blank=False,
+        help_text='Обязательное поле. Максимум 150 символов.'
+    )
+    last_name = models.CharField(
+        max_length=150,
+        verbose_name='Фамилия',
+        blank=False,
+        help_text='Обязательное поле. Максимум 150 символов.'
+    )
     is_subscribed = models.BooleanField(default=False)
     avatar = models.ImageField(upload_to='users/', blank=True, null=True)
 

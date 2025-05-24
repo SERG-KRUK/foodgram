@@ -1,9 +1,7 @@
 """Serializers for recipes application."""
 import base64
 import uuid
-from collections import Counter
 
-from django.db import transaction
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from djoser.serializers import (
@@ -12,7 +10,6 @@ from djoser.serializers import (
 )
 from rest_framework import serializers
 
-from .error import Error
 from recipes.models import (
     Ingredient,
     LinkMapped,
@@ -180,86 +177,122 @@ class RecipeSerializer(serializers.ModelSerializer):
 class RecipeCreateSerializer(serializers.ModelSerializer):
     """Serializer for recipe creation."""
 
-    tags = serializers.ListField(
-        child=serializers.PrimaryKeyRelatedField(
-            queryset=Tag.objects.all(),
-        ),
-        allow_empty=False,
-        required=True,
+    tags = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Tag.objects.all()
     )
-    ingredients = serializers.ListField(
-        child=RecipeIngredientSerializer(),
-        allow_empty=False,
-        required=True,
-    )
+    ingredients = RecipeIngredientSerializer(many=True)
     image = Base64ImageField(required=False)
 
     class Meta:
+        """Meta class for RecipeCreateSerializer."""
+
         model = Recipe
         fields = (
-            'ingredients',
-            'tags',
-            'image',
-            'name',
-            'text',
-            'cooking_time',
+            'id', 'tags', 'ingredients', 'name',
+            'image', 'text', 'cooking_time'
         )
+        read_only_fields = ('id',)
 
-    @staticmethod
-    def _check_duplicates(array, field_name):
-        counts = Counter(array)
-        duplicates = {item for item, count in counts.items() if count > 1}
-        if duplicates:
-            raise serializers.ValidationError(
-                {field_name: Error.DUPLICATES.format(duplicates)}
-            )
-
-    def validate_tags(self, tags):
-        self._check_duplicates([tag.id for tag in tags], 'tags')
-        return tags
-
-    def validate_ingredients(self, ingredients):
-        self._check_duplicates(
-            [item['ingredient'].id for item in ingredients],
-            'ingredients',
-        )
-        return ingredients
-
-    def validate_image(self, image):
-        if not image:
-            raise serializers.ValidationError(Error.NO_IMAGE)
-        return image
-
-    @staticmethod
-    def _save_ingredients(recipe, ingredients):
-        RecipeIngredient.objects.bulk_create(
-            RecipeIngredient(
-                recipe=recipe,
-                ingredient=ingredient['ingredient'],
-                amount=ingredient['amount'],
-            )
-            for ingredient in ingredients
-        )
-
-    @transaction.atomic
     def create(self, validated_data):
-        ingredients_data = validated_data.pop('ingredients')
-        recipe = super().create(validated_data)
-        self._save_ingredients(recipe, ingredients_data)
+        """Create recipe with ingredients."""
+        validated_data.pop('author', None)
+        tags = validated_data.pop('tags', [])
+        ingredients_data = validated_data.pop('ingredients', [])
+
+        recipe = Recipe.objects.create(
+            author=self.context['request'].user,
+            **validated_data
+        )
+
+        recipe.tags.set(tags)
+        self._create_or_update_ingredients(recipe, ingredients_data)
         return recipe
 
-    @transaction.atomic
-    def update(self, recipe, validated_data):
-        try:
-            new_ingredients = validated_data.pop('ingredients')
-            recipe.ingredients.clear()
-            self._save_ingredients(recipe, new_ingredients)
-        except KeyError:
-            pass
-        return super().update(recipe, validated_data)
+    def update(self, instance, validated_data):
+        """Update recipe with ingredients."""
+        tags = validated_data.pop('tags', None)
+        ingredients_data = validated_data.pop('ingredients', None)
 
-    def to_representation(self, recipe):
-        return RecipeSerializer(recipe, context=self.context).data
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        if tags is not None:
+            instance.tags.set(tags)
+
+        if ingredients_data is not None:
+
+            instance.recipe_ingredients.all().delete()
+
+            new_ingredients = [
+                RecipeIngredient(
+                    recipe=instance,
+                    ingredient=ingredient_data['id'],
+                    amount=ingredient_data['amount']
+                )
+                for ingredient_data in ingredients_data
+            ]
+            RecipeIngredient.objects.bulk_create(new_ingredients)
+
+        instance.save()
+        return instance
+
+    def _create_or_update_ingredients(self, recipe, ingredients_data):
+        """Create or update recipe ingredients."""
+        ingredients = [
+            RecipeIngredient(
+                recipe=recipe,
+                ingredient=ingredient_data['id'],
+                amount=ingredient_data['amount']
+            )
+            for ingredient_data in ingredients_data
+        ]
+        RecipeIngredient.objects.bulk_create(ingredients)
+
+    def validate_ingredients(self, value):
+        """Валидация ингредиентов."""
+        if not value:
+            raise serializers.ValidationError({
+                'ingredients': ['Необходим хотя бы один ингредиент.']
+            })
+    
+        errors = []
+        ingredient_ids = []
+        
+        for ingredient in value:
+            if ingredient['amount'] <= 0:
+                errors.append(
+                    f"Ингредиент '{ingredient['id'].name}': "
+                    f"количество должно быть больше 0"
+                )
+            ingredient_ids.append(ingredient['id'].id)
+        
+        if len(ingredient_ids) != len(set(ingredient_ids)):
+            errors.append("Ингредиенты не должны повторяться")
+        
+        if errors:
+            raise serializers.ValidationError({
+                'ingredients': errors
+            })
+        
+        return value
+
+    def validate_tags(self, value):
+        """Validate tags data."""
+        if not value:
+            raise serializers.ValidationError("Необходим хотя бы один тег.")
+        return value
+
+    def validate_cooking_time(self, value):
+        """Validate cooking time."""
+        if value <= 0:
+            raise serializers.ValidationError(
+                "Время приготовления должно быть больше 0.")
+        return value
+
+    def to_representation(self, instance):
+        """Convert instance to representation."""
+        return RecipeSerializer(instance, context=self.context).data
 
 
 class ShortRecipeSerializer(serializers.ModelSerializer):
