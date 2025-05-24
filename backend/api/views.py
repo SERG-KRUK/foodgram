@@ -3,7 +3,8 @@
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
-from rest_framework import status, viewsets
+
+from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.permissions import (
     AllowAny,
@@ -246,6 +247,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
         context = super().get_serializer_context()
         context.update({'request': self.request})
         return context
+    
+    def handle_exception(self, exc):
+        if isinstance(exc, serializers.ValidationError):
+            if 'ingredients' in exc.detail:
+                return Response(
+                    {'errors': exc.detail['errors']},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        return super().handle_exception(exc)
 
     @action(
         detail=True,
@@ -296,6 +306,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    
 
     @action(detail=False, methods=['get'])
     def shopping_cart_list(self, request):

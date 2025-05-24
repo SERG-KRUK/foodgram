@@ -119,13 +119,19 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     name = serializers.ReadOnlyField(source='ingredient.name')
     measurement_unit = serializers.ReadOnlyField(
         source='ingredient.measurement_unit')
-    amount = serializers.IntegerField(min_value=1)
 
     class Meta:
         """Meta class for RecipeIngredientSerializer."""
 
         model = RecipeIngredient
         fields = ('id', 'name', 'measurement_unit', 'amount')
+
+    def validate_amount(self, value):
+        if value <= 0:
+            raise serializers.ValidationError(
+                "Количество ингредиента должно быть целым числом больше 0"
+            )
+        return value
 
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -256,23 +262,31 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                 'ingredients': ['Необходим хотя бы один ингредиент.']
             })
 
-        errors = {}
+        errors = []
         ingredient_ids = []
-        
-        for idx, ingredient in enumerate(value):
+
+        for ingredient in value:
+            # Проверка на нулевое количество
             if ingredient['amount'] <= 0:
-                errors[str(idx)] = {
-                    'amount': ['Количество должно быть больше 0'],
-                    'name': ingredient['id'].name
-                }
+                errors.append({
+                    'message': 'Количество ингредиента должно быть целым числом больше 0',
+                    'ingredient_id': ingredient['id'].id,
+                    'field': 'amount'
+                })
             ingredient_ids.append(ingredient['id'].id)
-        
+
         if len(ingredient_ids) != len(set(ingredient_ids)):
-            errors['non_field_errors'] = ['Ингредиенты не должны повторяться']
-        
+            errors.append({
+                'message': 'Ингредиенты не должны повторяться',
+                'field': 'ingredients'
+            })
+
         if errors:
-            raise serializers.ValidationError(errors)
-        
+            raise serializers.ValidationError({
+                'errors': errors,
+                'detail': 'Ошибка валидации ингредиентов'
+            })
+
         return value
 
     def validate_tags(self, value):
