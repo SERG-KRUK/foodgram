@@ -173,6 +173,7 @@ class RecipeIngredient(models.Model):
     class Meta:
         """Мета-класс для модели RecipeIngredient."""
 
+        ordering = ['id']
         verbose_name = 'Ингредиент в рецепте'
         verbose_name_plural = 'Ингредиенты в рецептах'
         constraints = [

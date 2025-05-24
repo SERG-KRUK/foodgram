@@ -147,11 +147,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
     image = serializers.SerializerMethodField()
     author = UserSerializer(read_only=True)
-    ingredients = RecipeIngredientSerializer(
-        source='recipe_ingredients',
-        many=True,
-        read_only=True
-    )
+    ingredients = serializers.SerializerMethodField()
     short_link = serializers.CharField(read_only=True)
 
     class Meta:
@@ -183,6 +179,12 @@ class RecipeSerializer(serializers.ModelSerializer):
         if user.is_authenticated:
             return obj.shopping_cart.filter(user=user).exists()
         return False
+    
+    def get_ingredients(self, obj):
+        # Явно сортируем ингредиенты по ID
+        ingredients = obj.recipe_ingredients.select_related(
+            'ingredient').order_by('id')
+        return RecipeIngredientSerializer(ingredients, many=True).data
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
@@ -221,7 +223,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return recipe
 
     def update(self, instance, validated_data):
-        """Переработанный метод обновления"""
+        """Обновление рецепта с сохранением ингредиентов"""
         tags = validated_data.pop('tags', None)
         ingredients_data = validated_data.pop('ingredients', None)
 
@@ -235,22 +237,26 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
         # Обновляем ингредиенты только если они явно переданы
         if ingredients_data is not None:
-            # Удаляем только те ингредиенты, которых нет в новом списке
-            current_ids = {ing['id'].id for ing in ingredients_data}
-            instance.recipe_ingredients.exclude(
-                ingredient_id__in=current_ids
-            ).delete()
-            
-            # Обновляем или создаем ингредиенты
-            for ing_data in ingredients_data:
-                RecipeIngredient.objects.update_or_create(
-                    recipe=instance,
-                    ingredient=ing_data['id'],
-                    defaults={'amount': ing_data['amount']}
-                )
-        
+            self._update_ingredients(instance, ingredients_data)
+
         instance.save()
         return instance
+    
+    def _update_ingredients(self, recipe, ingredients_data):
+        """Безопасное обновление ингредиентов"""
+
+        recipe.recipe_ingredients.all().delete()
+
+        # Создаем новые с валидацией
+        ingredients = [
+            RecipeIngredient(
+                recipe=recipe,
+                ingredient=ingredient_data['id'],
+                amount=ingredient_data['amount']
+            )
+            for ingredient_data in ingredients_data
+        ]
+        RecipeIngredient.objects.bulk_create(ingredients)
 
     def _create_or_update_ingredients(self, recipe, ingredients_data):
         """Create or update recipe ingredients."""
