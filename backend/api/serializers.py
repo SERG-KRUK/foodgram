@@ -306,7 +306,8 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                 })
             if not data.get('ingredients'):
                 raise serializers.ValidationError({
-                    'ingredients': ['Список ингредиентов не может быть пустым.']
+                    'ingredients': [
+                        'Список ингредиентов не может быть пустым.']
                 })
         
         # Для обновления рецепта с явно переданным пустым списком
