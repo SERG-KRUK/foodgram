@@ -23,13 +23,13 @@ class UserCreationForm(ModelForm):
     """Форма создания пользователя с обязательными ФИО."""
 
     class Meta:
-        """Мета-класс для создания пользователя"""
+        """Мета-класс для создания пользователя."""
 
         model = User
         fields = ('email', 'username', 'first_name', 'last_name', 'password')
         
     def clean(self):
-        """функция валидации пользователя"""
+        """функция валидации пользователя."""
         cleaned_data = super().clean()
         if not cleaned_data.get('first_name'):
             raise ValidationError("Имя обязательно для заполнения")

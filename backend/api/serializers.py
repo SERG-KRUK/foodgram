@@ -127,6 +127,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'measurement_unit', 'amount')
 
     def validate_amount(self, value):
+        """Function for validate amount."""
         try:
             if int(value) <= 0:
                 raise serializers.ValidationError(
@@ -181,7 +182,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         return False
 
     def get_ingredients(self, obj):
-        # Явно сортируем ингредиенты по ID
+        """Функция сортирует ингредиенты по ID."""
         ingredients = obj.recipe_ingredients.select_related(
             'ingredient').order_by('id')
         return RecipeIngredientSerializer(ingredients, many=True).data
@@ -223,7 +224,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return recipe
 
     def update(self, instance, validated_data):
-        """Обновление рецепта с сохранением ингредиентов"""
+        """Обновление рецепта с сохранением ингредиентов."""
         tags = validated_data.pop('tags', None)
         ingredients_data = validated_data.pop('ingredients', None)
 
@@ -244,10 +245,8 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     def _update_ingredients(self, recipe, ingredients_data):
         """Безопасное обновление ингредиентов."""
-
         recipe.recipe_ingredients.all().delete()
 
-        # Создаем новые с валидацией
         ingredients = [
             RecipeIngredient(
                 recipe=recipe,

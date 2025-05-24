@@ -48,7 +48,7 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ['username']
 
     def clean(self):
-        """функция с валидацией пользователя"""
+        """функция с валидацией пользователя."""
         super().clean()
         if not self.first_name:
             raise ValidationError("Имя обязательно для заполнения")
@@ -56,7 +56,7 @@ class User(AbstractUser):
             raise ValidationError("Фамилия обязательна для заполнения")
 
     def save(self, *args, **kwargs):
-        """функция сохранения данных"""
+        """функция сохранения данныхю"""
         self.full_clean()
         super().save(*args, **kwargs)
 
@@ -266,12 +266,12 @@ class Subscription(models.Model):
     )
 
     def clean(self):
-        """функция с валидацией подписки"""
+        """функция с валидацией подписки."""
         if self.user == self.author:
             raise ValidationError("Нельзя подписаться на самого себя")
 
     def save(self, *args, **kwargs):
-        """функция с сохранением подписки"""
+        """функция с сохранением подписки."""
         self.full_clean()
         super().save(*args, **kwargs)
 
