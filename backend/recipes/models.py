@@ -21,6 +21,18 @@ class User(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
+
+    def clean(self):
+        super().clean()
+        if not self.first_name:
+            raise ValidationError("Имя обязательно для заполнения")
+        if not self.last_name:
+            raise ValidationError("Фамилия обязательна для заполнения")
+    
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
     class Meta:
         """Мета-класс для модели User."""
 

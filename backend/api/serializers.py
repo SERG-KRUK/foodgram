@@ -119,6 +119,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     name = serializers.ReadOnlyField(source='ingredient.name')
     measurement_unit = serializers.ReadOnlyField(
         source='ingredient.measurement_unit')
+    amount = serializers.IntegerField(min_value=1)
 
     class Meta:
         """Meta class for RecipeIngredientSerializer."""
@@ -251,25 +252,29 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     def validate_ingredients(self, value):
         """Валидация ингредиентов."""
         if not value:
-            raise serializers.ValidationError(
-                {"error": "Необходим хотя бы один ингредиент."}
-            )
-
-        ingredient_ids = [item['id'].id for item in value]
-        if len(ingredient_ids) != len(set(ingredient_ids)):
-            raise serializers.ValidationError(
-                {"error": "Ингредиенты не должны повторяться."}
-            )
-
+            raise serializers.ValidationError({
+                'ingredients': ['Необходим хотя бы один ингредиент.']
+            })
+    
+        errors = []
+        ingredient_ids = []
+        
         for ingredient in value:
             if ingredient['amount'] <= 0:
-                raise serializers.ValidationError(
-                    {
-                        "error":(
-                            f"Количество ингредиента '{ingredient['id'].name}'"
-                            " должно быть больше 0.")
-                    }
+                errors.append(
+                    f"Ингредиент '{ingredient['id'].name}': "
+                    f"количество должно быть больше 0"
                 )
+            ingredient_ids.append(ingredient['id'].id)
+        
+        if len(ingredient_ids) != len(set(ingredient_ids)):
+            errors.append("Ингредиенты не должны повторяться")
+        
+        if errors:
+            raise serializers.ValidationError({
+                'ingredients': errors
+            })
+        
         return value
 
     def validate_tags(self, value):
