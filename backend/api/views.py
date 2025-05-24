@@ -249,6 +249,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return context
     
     def handle_exception(self, exc):
+        """Добавление обработки ошибки 0 ингридиента."""
         if isinstance(exc, serializers.ValidationError):
             if 'ingredients' in exc.detail:
                 return Response(
