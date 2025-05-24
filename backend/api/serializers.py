@@ -221,26 +221,34 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return recipe
 
     def update(self, instance, validated_data):
-        """Update recipe with ingredients."""
+        """Переработанный метод обновления"""
         tags = validated_data.pop('tags', None)
         ingredients_data = validated_data.pop('ingredients', None)
 
-        # Обновляем основные поля рецепта
+        # Обновляем основные поля
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
 
-        # Обновляем теги, если они переданы
+        # Обновляем теги
         if tags is not None:
             instance.tags.set(tags)
 
-        # Обновляем ингредиенты, только если они переданы
+        # Обновляем ингредиенты только если они явно переданы
         if ingredients_data is not None:
-            # Удаляем старые ингредиенты
-            instance.recipe_ingredients.all().delete()
-
-            # Создаем новые ингредиенты с валидацией
-            self._create_or_update_ingredients(instance, ingredients_data)
-
+            # Удаляем только те ингредиенты, которых нет в новом списке
+            current_ids = {ing['id'].id for ing in ingredients_data}
+            instance.recipe_ingredients.exclude(
+                ingredient_id__in=current_ids
+            ).delete()
+            
+            # Обновляем или создаем ингредиенты
+            for ing_data in ingredients_data:
+                RecipeIngredient.objects.update_or_create(
+                    recipe=instance,
+                    ingredient=ing_data['id'],
+                    defaults={'amount': ing_data['amount']}
+                )
+        
         instance.save()
         return instance
 
@@ -289,18 +297,27 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, data):
-        """Общая валидация с проверкой ингредиентов при создании"""
-        if self.instance is None and 'ingredients' not in data:
+        """Улучшенная валидация с учетом контекста операции"""
+        # Для создания рецепта
+        if self.instance is None:
+            if 'ingredients' not in data:
+                raise serializers.ValidationError({
+                    'ingredients': ['Необходим хотя бы один ингредиент.']
+                })
+            if not data.get('ingredients'):
+                raise serializers.ValidationError({
+                    'ingredients': ['Список ингредиентов не может быть пустым.']
+                })
+        
+        # Для обновления рецепта с явно переданным пустым списком
+        if 'ingredients' in data and not data['ingredients']:
             raise serializers.ValidationError({
-                'ingredients': ['Необходим хотя бы один ингредиент.']
+                'ingredients': ['Список ингредиентов не может быть пустым.']
             })
         
-        try:
-            if 'ingredients' in data:
-                self.validate_ingredients(data['ingredients'])
-        except serializers.ValidationError as e:
-            raise serializers.ValidationError(
-                {'ingredients': e.detail['ingredients']})
+        # Стандартная валидация ингредиентов
+        if 'ingredients' in data:
+            self.validate_ingredients(data['ingredients'])
         
         return data
 
