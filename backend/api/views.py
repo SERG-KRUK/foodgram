@@ -249,11 +249,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return context
     
     def handle_exception(self, exc):
-        """Добавление обработки ошибки 0 ингридиента."""
         if isinstance(exc, serializers.ValidationError):
+            response_data = {}
             if 'ingredients' in exc.detail:
+                response_data['ingredients'] = exc.detail['ingredients']
+            if 'non_field_errors' in exc.detail:
+                response_data['non_field_errors'] = exc.detail[
+                    'non_field_errors']
+            if response_data:
                 return Response(
-                    {'errors': exc.detail['errors']},
+                    response_data,
                     status=status.HTTP_400_BAD_REQUEST
                 )
         return super().handle_exception(exc)
