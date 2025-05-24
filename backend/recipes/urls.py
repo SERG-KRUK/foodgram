@@ -1,3 +1,5 @@
+"""This module defines the URL routing for the recipes application."""
+
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 from recipes.views import AdminTagViewSet, AdminIngredientViewSet

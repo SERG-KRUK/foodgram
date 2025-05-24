@@ -179,7 +179,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         if user.is_authenticated:
             return obj.shopping_cart.filter(user=user).exists()
         return False
-    
+
     def get_ingredients(self, obj):
         # Явно сортируем ингредиенты по ID
         ingredients = obj.recipe_ingredients.select_related(
@@ -241,9 +241,9 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
-    
+
     def _update_ingredients(self, recipe, ingredients_data):
-        """Безопасное обновление ингредиентов"""
+        """Безопасное обновление ингредиентов."""
 
         recipe.recipe_ingredients.all().delete()
 
@@ -279,7 +279,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
         errors = []
         ingredient_ids = []
-        
+
         for ingredient in value:
             # Проверка на нулевое или отрицательное количество
             if int(ingredient['amount']) <= 0:
@@ -289,21 +289,21 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                     'error': 'Количество должно быть целым числом больше 0'
                 })
             ingredient_ids.append(ingredient['id'].id)
-        
+
         if len(ingredient_ids) != len(set(ingredient_ids)):
             errors.append({
                 'error': 'Ингредиенты не должны повторяться'
             })
-        
+
         if errors:
             raise serializers.ValidationError({
                 'ingredients': errors
             })
-        
+
         return value
 
     def validate(self, data):
-        """Улучшенная валидация с учетом контекста операции"""
+        """Улучшенная валидация с учетом контекста операции."""
         # Для создания рецепта
         if self.instance is None:
             if 'ingredients' not in data:
@@ -315,17 +315,17 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                     'ingredients': [
                         'Список ингредиентов не может быть пустым.']
                 })
-        
+
         # Для обновления рецепта с явно переданным пустым списком
         if 'ingredients' in data and not data['ingredients']:
             raise serializers.ValidationError({
                 'ingredients': ['Список ингредиентов не может быть пустым.']
             })
-        
+
         # Стандартная валидация ингредиентов
         if 'ingredients' in data:
             self.validate_ingredients(data['ingredients'])
-        
+
         return data
 
     def validate_tags(self, value):

@@ -247,8 +247,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         context = super().get_serializer_context()
         context.update({'request': self.request})
         return context
-    
+
     def handle_exception(self, exc):
+        """функция валидатор ингридиентов."""
         if isinstance(exc, serializers.ValidationError):
             response_data = {}
             if 'ingredients' in exc.detail:
@@ -312,7 +313,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-    
 
     @action(detail=False, methods=['get'])
     def shopping_cart_list(self, request):

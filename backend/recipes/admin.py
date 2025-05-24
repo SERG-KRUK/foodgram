@@ -21,12 +21,15 @@ from .models import (
 
 class UserCreationForm(ModelForm):
     """Форма создания пользователя с обязательными ФИО."""
-    
+
     class Meta:
+        """Мета-класс для создания пользователя"""
+
         model = User
         fields = ('email', 'username', 'first_name', 'last_name', 'password')
         
     def clean(self):
+        """функция валидации пользователя"""
         cleaned_data = super().clean()
         if not cleaned_data.get('first_name'):
             raise ValidationError("Имя обязательно для заполнения")
@@ -38,7 +41,7 @@ class UserCreationForm(ModelForm):
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
     """Административная панель для модели пользователя."""
-    
+
     add_form = UserCreationForm
     add_fieldsets = (
         (None, {
@@ -47,7 +50,7 @@ class UserAdmin(BaseUserAdmin):
                        'first_name', 'last_name', 'password1', 'password2'),
         }),
     )
-    
+
     list_display = ('email', 'username', 'first_name', 'last_name', 'is_staff')
     list_filter = ('is_staff', 'is_superuser', 'is_active')
     search_fields = ('email', 'username', 'first_name', 'last_name')
@@ -56,8 +59,9 @@ class UserAdmin(BaseUserAdmin):
 
 class RecipeIngredientInlineForm(ModelForm):
     """Форма для ингредиентов с валидацией количества."""
-    
+
     def clean_amount(self):
+        """функция для ингредиентов с валидацией количества."""
         amount = self.cleaned_data.get('amount')
         if amount <= 0:
             raise ValidationError("Количество должно быть больше 0")
@@ -66,7 +70,7 @@ class RecipeIngredientInlineForm(ModelForm):
 
 class RecipeIngredientInline(admin.TabularInline):
     """Инлайн для отображения связи рецептов и ингредиентов."""
-    
+
     model = RecipeIngredient
     form = RecipeIngredientInlineForm
     extra = 1
@@ -75,8 +79,9 @@ class RecipeIngredientInline(admin.TabularInline):
 
 class RecipeAdminForm(ModelForm):
     """Форма рецепта с валидацией ингредиентов."""
-    
+
     def clean(self):
+        """функиця рецепта с валидацией ингредиентов."""
         cleaned_data = super().clean()
         if not self.instance.pk and not self.cleaned_data.get('ingredients'):
             raise ValidationError("Добавьте хотя бы один ингредиент")
@@ -86,7 +91,7 @@ class RecipeAdminForm(ModelForm):
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     """Административная панель для модели рецептов."""
-    
+
     form = RecipeAdminForm
     list_display = ('name', 'author', 'cooking_time', 'favorites_count')
     list_filter = ('tags', 'author')
@@ -103,7 +108,7 @@ class RecipeAdmin(admin.ModelAdmin):
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     """Административная панель для модели ингредиентов."""
-    
+
     list_display = ('name', 'measurement_unit')
     search_fields = ('name',)
     list_filter = ('measurement_unit',)
@@ -112,7 +117,7 @@ class IngredientAdmin(admin.ModelAdmin):
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     """Административная панель для модели тегов."""
-    
+
     list_display = ('name', 'slug')
     search_fields = ('name', 'slug')
     prepopulated_fields = {'slug': ('name',)}
@@ -120,12 +125,13 @@ class TagAdmin(admin.ModelAdmin):
 
 class SubscriptionAdminForm(ModelForm):
     """Форма подписки с проверкой на самоподписку."""
-    
+
     def clean(self):
+        """Форма подписки с проверкой на самоподписку."""
         cleaned_data = super().clean()
         user = cleaned_data.get('user')
         author = cleaned_data.get('author')
-        
+
         if user and author and user == author:
             raise ValidationError("Нельзя подписаться на самого себя")
         return cleaned_data
@@ -134,7 +140,7 @@ class SubscriptionAdminForm(ModelForm):
 @admin.register(Subscription)
 class SubscriptionAdmin(admin.ModelAdmin):
     """Административная панель для модели подписок."""
-    
+
     form = SubscriptionAdminForm
     list_display = ('user', 'author')
     list_filter = ('user',)
@@ -143,7 +149,7 @@ class SubscriptionAdmin(admin.ModelAdmin):
 @admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
     """Административная панель для модели избранного."""
-    
+
     list_display = ('user', 'recipe')
     list_filter = ('user',)
 
@@ -151,7 +157,7 @@ class FavoriteAdmin(admin.ModelAdmin):
 @admin.register(ShoppingCart)
 class ShoppingCartAdmin(admin.ModelAdmin):
     """Административная панель для модели корзины покупок."""
-    
+
     list_display = ('user', 'recipe')
     list_filter = ('user',)
 

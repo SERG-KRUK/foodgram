@@ -1,3 +1,5 @@
+"""Модуль для создания суперюзера кастомного."""
+
 from django.core.management import BaseCommand
 from django.contrib.auth import get_user_model
 from django.core.validators import validate_email
@@ -5,28 +7,31 @@ from django.core.exceptions import ValidationError
 
 
 class Command(BaseCommand):
+    """Класс для создания суперюзера кастомного."""
+
     help = 'Create a superuser with all required fields'
 
     def handle(self, *args, **options):
+        """функция для валидации."""
         user_model = get_user_model()
-        
+
         self.stdout.write("Creating superuser...\n")
-        
+
         # Email validation with retry
         email = self._get_valid_email(user_model)
-        
+
         # Username validation with retry
         username = self._get_valid_username(user_model)
-        
+
         # Required fields validation
         first_name = self._get_valid_input(
             "First name: ", "Имя обязательно для заполнения")
         last_name = self._get_valid_input(
             "Last name: ", "Фамилия обязательна для заполнения")
-        
+
         # Password validation
         password = self._get_valid_password()
-        
+
         # Create superuser
         self._create_superuser(
             user_model,
