@@ -8,15 +8,15 @@ class Command(BaseCommand):
     help = 'Create a superuser with all required fields'
 
     def handle(self, *args, **options):
-        User = get_user_model()
+        user_model = get_user_model()
         
         self.stdout.write("Creating superuser...\n")
         
         # Email validation with retry
-        email = self._get_valid_email(User)
+        email = self._get_valid_email(user_model)
         
         # Username validation with retry
-        username = self._get_valid_username(User)
+        username = self._get_valid_username(user_model)
         
         # Required fields validation
         first_name = self._get_valid_input(
@@ -29,7 +29,7 @@ class Command(BaseCommand):
         
         # Create superuser
         self._create_superuser(
-            User,
+            user_model,
             email=email,
             username=username,
             first_name=first_name,
@@ -37,13 +37,13 @@ class Command(BaseCommand):
             password=password
         )
 
-    def _get_valid_email(self, User):
+    def _get_valid_email(self, user_model):
         """Validate and return email."""
         while True:
             email = input("Email: ").strip()
             try:
                 validate_email(email)
-                if not User.objects.filter(email=email).exists():
+                if not user_model.objects.filter(email=email).exists():
                     return email
                 self.stderr.write(
                     "Error: Пользователь с таким email уже существует\n")
@@ -51,12 +51,12 @@ class Command(BaseCommand):
                 self.stderr.write(
                     "Error: Введите правильный адрес электронной почты\n")
 
-    def _get_valid_username(self, User):
+    def _get_valid_username(self, user_model):
         """Validate and return username."""
         while True:
             username = input("Username: ").strip()
             if username:
-                if not User.objects.filter(username=username).exists():
+                if not user_model.objects.filter(username=username).exists():
                     return username
                 self.stderr.write("Error: Имя пользователя уже занято\n")
             else:
@@ -79,16 +79,16 @@ class Command(BaseCommand):
                 return password
             self.stderr.write("Error: Пароли не совпадают или пустые\n")
 
-    def _create_superuser(self, User, **kwargs):
+    def _create_superuser(self, user_model, **kwargs):
         """Create superuser with given parameters."""
         try:
-            user = User.objects.create_superuser(**kwargs)
+            user = user_model.objects.create_superuser(**kwargs)
             self.stdout.write(
                 self.style.SUCCESS(
                     f"Superuser {kwargs['username']} created successfully!"
                 )
             )
-            return user  # Теперь переменная используется
+            return user
         except Exception as e:
             self.stderr.write(f"Error: {str(e)}\n")
             raise
