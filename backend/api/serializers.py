@@ -255,25 +255,23 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 'ingredients': ['Необходим хотя бы один ингредиент.']
             })
-    
-        errors = []
+
+        errors = {}
         ingredient_ids = []
         
-        for ingredient in value:
+        for idx, ingredient in enumerate(value):
             if ingredient['amount'] <= 0:
-                errors.append(
-                    f"Ингредиент '{ingredient['id'].name}': "
-                    f"количество должно быть больше 0"
-                )
+                errors[str(idx)] = {
+                    'amount': ['Количество должно быть больше 0'],
+                    'name': ingredient['id'].name
+                }
             ingredient_ids.append(ingredient['id'].id)
         
         if len(ingredient_ids) != len(set(ingredient_ids)):
-            errors.append("Ингредиенты не должны повторяться")
+            errors['non_field_errors'] = ['Ингредиенты не должны повторяться']
         
         if errors:
-            raise serializers.ValidationError({
-                'ingredients': errors
-            })
+            raise serializers.ValidationError(errors)
         
         return value
 
