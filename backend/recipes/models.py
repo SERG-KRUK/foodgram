@@ -3,6 +3,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
 import string
 from random import choice, randint
 
@@ -12,8 +13,8 @@ class User(AbstractUser):
 
     email = models.EmailField(max_length=254, unique=True)
     username = models.CharField(max_length=150, unique=True)
-    first_name = models.CharField(max_length=150)
-    last_name = models.CharField(max_length=150)
+    first_name = models.CharField(max_length=150, blank=False)
+    last_name = models.CharField(max_length=150, blank=False)
     is_subscribed = models.BooleanField(default=False)
     avatar = models.ImageField(upload_to='users/', blank=True, null=True)
 
@@ -127,7 +128,9 @@ class RecipeIngredient(models.Model):
         on_delete=models.CASCADE,
         related_name='recipe_ingredients'
     )
-    amount = models.PositiveIntegerField()
+    amount = models.PositiveIntegerField(
+        validators=[MinValueValidator(1)]
+    )
 
     class Meta:
         """Мета-класс для модели RecipeIngredient."""
@@ -221,6 +224,14 @@ class Subscription(models.Model):
         on_delete=models.CASCADE,
         related_name='following'
     )
+
+    def clean(self):
+        if self.user == self.author:
+            raise ValidationError("Нельзя подписаться на самого себя")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     class Meta:
         """Мета-класс для модели Subscription."""
