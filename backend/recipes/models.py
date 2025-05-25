@@ -3,7 +3,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator
-from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 import string
 from random import choice, randint
