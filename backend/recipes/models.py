@@ -292,6 +292,7 @@ class Subscription(models.Model):
         ]
 
     def __str__(self):
+        """Возвращает строковое представление подписки."""
         return f"{self.user} подписан на {self.author}"
 
 
