@@ -104,13 +104,17 @@ class TagSerializer(serializers.ModelSerializer):
 
 class IngredientSerializer(serializers.ModelSerializer):
     """Serializer for ingredients."""
+
     class Meta:
+        """Meta class for IngredientSerializer."""
+
         model = Ingredient
         fields = '__all__'
 
 
 class RecipeIngredientReadSerializer(serializers.ModelSerializer):
     """Serializer for reading recipe ingredients."""
+
     id = serializers.IntegerField(source='ingredient.id', read_only=True)
     name = serializers.CharField(source='ingredient.name', read_only=True)
     measurement_unit = serializers.CharField(
@@ -119,6 +123,8 @@ class RecipeIngredientReadSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
+        """Meta class for RecipeIngredientSerializer."""
+
         model = RecipeIngredient
         fields = ('id', 'name', 'measurement_unit', 'amount')
         read_only_fields = fields
@@ -126,10 +132,13 @@ class RecipeIngredientReadSerializer(serializers.ModelSerializer):
 
 class RecipeIngredientWriteSerializer(serializers.ModelSerializer):
     """Serializer for writing recipe ingredients."""
+
     id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
     amount = serializers.IntegerField()
 
     class Meta:
+        """Meta class for RecipeIngredientSerializer."""
+
         model = RecipeIngredient
         fields = ('id', 'amount')
 
@@ -149,6 +158,7 @@ class RecipeIngredientWriteSerializer(serializers.ModelSerializer):
 
 class RecipeSerializer(serializers.ModelSerializer):
     """Serializer for recipe details."""
+
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     tags = TagSerializer(many=True, read_only=True)
@@ -158,6 +168,8 @@ class RecipeSerializer(serializers.ModelSerializer):
     short_link = serializers.CharField(read_only=True)
 
     class Meta:
+        """Meta class for RecipeSerializer."""
+
         model = Recipe
         fields = [
             'id', 'tags', 'author', 'ingredients', 'name',

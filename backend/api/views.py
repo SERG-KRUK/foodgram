@@ -199,7 +199,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filterset_class = RecipeFilterSet
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
 
-
     def get_serializer_class(self):
         """Возвращает класс сериализатора в зависимости от действия."""
         if self.action in ['create', 'update', 'partial_update']:
@@ -326,6 +325,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             'short-link': request.build_absolute_uri(
                 f'/s/{recipe.short_link}/')
         })
+
 
 def recipe_by_short_link(request, short_link):
     """Перенаправление по короткой ссылке на полный URL рецепта."""
