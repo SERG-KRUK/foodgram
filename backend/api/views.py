@@ -38,7 +38,7 @@ from .serializers import (
     UserCreateSerializer,
     UserSerializer,
 )
-from filters import IngredientFilter, RecipeFilterSet
+from .filters import IngredientFilter, RecipeFilterSet
 
 
 class UserViewSet(viewsets.ModelViewSet):
