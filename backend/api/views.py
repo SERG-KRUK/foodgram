@@ -362,10 +362,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='s/(?P<short_link>[^/.]+)')
     def by_short_link(self, request, short_link=None):
-        """Обработка коротких ссылок на рецепты с редиректом."""
+        """Полный аналог recipe_by_short_link с редиректом."""
         recipe = get_object_or_404(Recipe, short_link=short_link)
-
-        if request.accepted_renderer.format == 'api':
-            serializer = self.get_serializer(recipe)
-            return Response(serializer.data)
         return redirect(f'/recipes/{recipe.pk}/')
