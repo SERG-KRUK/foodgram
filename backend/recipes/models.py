@@ -4,6 +4,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 import string
 from random import choice, randint
 
@@ -18,7 +19,8 @@ class User(AbstractUser):
         help_text='Обязательное поле. Максимум 254 символа.',
         error_messages={
             'unique': "Пользователь с таким email уже существует.",
-        }
+        },
+        validators=[validate_email]
     )
     username = models.CharField(
         max_length=150,
@@ -45,20 +47,7 @@ class User(AbstractUser):
     avatar = models.ImageField(upload_to='users/', blank=True, null=True)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
-
-    def clean(self):
-        """Проверяет пользователя."""
-        super().clean()
-        if not self.first_name:
-            raise ValidationError("Имя обязательно для заполнения")
-        if not self.last_name:
-            raise ValidationError("Фамилия обязательна для заполнения")
-
-    def save(self, *args, **kwargs):
-        """Проверяет пользователя."""
-        self.full_clean()
-        super().save(*args, **kwargs)
+    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
     class Meta:
         """Мета-класс для модели User."""
@@ -66,6 +55,20 @@ class User(AbstractUser):
         ordering = ['id']
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['email'],
+                name='unique_email'
+            ),
+            models.UniqueConstraint(
+                fields=['username'],
+                name='unique_username'
+            )
+        ]
+
+    def __str__(self):
+        """Строковое представление пользователя."""
+        return f'{self.email} ({self.get_full_name()})'
 
 
 class Tag(models.Model):

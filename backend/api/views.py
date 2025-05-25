@@ -8,6 +8,7 @@ from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.permissions import (
     AllowAny,
+    IsAdminUser,
     IsAuthenticated,
     IsAuthenticatedOrReadOnly,
 )
@@ -174,20 +175,29 @@ def get_ingredients(request):
     return Response(list(ingredients))
 
 
-class TagViewSet(viewsets.ReadOnlyModelViewSet):
-    """ViewSet для работы с тегами (только чтение)."""
-
+class TagViewSet(viewsets.ModelViewSet):
+    """ViewSet для работы с тегами."""
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    pagination_class = None
+    
+    def get_permissions(self):
+        """Разрешения для разных методов."""
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [IsAdminUser()]
+        return [AllowAny()]
 
 
-class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
-    """ViewSet для работы с ингредиентами (только чтение)."""
-
+class IngredientViewSet(viewsets.ModelViewSet):
+    """ViewSet для работы с ингредиентами."""
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
+    
+    def get_permissions(self):
+        """Разрешения для разных методов."""
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [IsAdminUser()]
+        return [AllowAny()]
 
     def get_queryset(self):
         """Фильтрация ингредиентов по имени."""

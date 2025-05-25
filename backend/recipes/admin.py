@@ -31,10 +31,15 @@ class UserCreationForm(ModelForm):
     def clean(self):
         """функция валидации пользователя."""
         cleaned_data = super().clean()
+        errors = {}
+        
         if not cleaned_data.get('first_name'):
-            raise ValidationError("Имя обязательно для заполнения")
+            errors['first_name'] = "Имя обязательно для заполнения"
         if not cleaned_data.get('last_name'):
-            raise ValidationError("Фамилия обязательна для заполнения")
+            errors['last_name'] = "Фамилия обязательна для заполнения"
+
+        if errors:
+            raise ValidationError(errors)
         return cleaned_data
 
 
@@ -83,8 +88,13 @@ class RecipeAdminForm(ModelForm):
     def clean(self):
         """функиця рецепта с валидацией ингредиентов."""
         cleaned_data = super().clean()
+        # Проверяем только при создании нового рецепта
         if not self.instance.pk and not self.cleaned_data.get('ingredients'):
-            raise ValidationError("Добавьте хотя бы один ингредиент")
+            # Проверяем, есть ли ингредиенты во inline-формах
+            if 'recipeingredient_set-TOTAL_FORMS' in self.data:
+                total_forms = int(self.data['recipeingredient_set-TOTAL_FORMS'])
+                if total_forms == 0:
+                    raise ValidationError("Добавьте хотя бы один ингредиент")
         return cleaned_data
 
 
@@ -98,6 +108,11 @@ class RecipeAdmin(admin.ModelAdmin):
     search_fields = ('name', 'author__username',)
     inlines = [RecipeIngredientInline]
     exclude = ('ingredients',)
+
+    def save_model(self, request, obj, form, change):
+        """Переопределяем сохранение модели для обработки ингредиентов."""
+        super().save_model(request, obj, form, change)
+        # После сохранения рецепта, ингредиенты сохраняются через inline-формы
 
     @display(description='В избранном')
     def favorites_count(self, obj):
@@ -133,7 +148,9 @@ class SubscriptionAdminForm(ModelForm):
         author = cleaned_data.get('author')
 
         if user and author and user == author:
-            raise ValidationError("Нельзя подписаться на самого себя")
+            raise ValidationError({
+                'author': "Нельзя подписаться на самого себя"
+            })
         return cleaned_data
 
 
