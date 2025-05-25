@@ -1,8 +1,8 @@
 """View-классы для обработки запросов API приложения recipes."""
 
 from django.db.models import Sum
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import get_object_or_404
 
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
@@ -362,6 +362,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='s/(?P<short_link>[^/.]+)')
     def by_short_link(self, request, short_link=None):
-        """Полный аналог recipe_by_short_link с редиректом."""
-        recipe = get_object_or_404(Recipe, short_link=short_link)
-        return redirect(f'/recipes/{recipe.pk}/')
+        """Обработка коротких ссылок через ViewSet."""
+        recipe = get_object_or_404(self.get_queryset(), short_link=short_link)
+        return HttpResponseRedirect(f'/api/recipes/{recipe.pk}/')
