@@ -206,6 +206,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
     """Serializer for recipe creation."""
+
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Tag.objects.all()
@@ -214,6 +215,8 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     image = Base64ImageField(required=False)
 
     class Meta:
+        """Meta for recipe creation."""
+
         model = Recipe
         fields = (
             'id', 'tags', 'ingredients', 'name',
