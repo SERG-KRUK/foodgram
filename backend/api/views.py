@@ -195,7 +195,7 @@ class IngredientViewSet(viewsets.ModelViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     """ViewSet для работы с рецептами."""
-    queryset = Recipe.objects.all()
+    queryset = Recipe.objects.prefetch_related('tags').all()
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
     filterset_class = RecipeFilter
 
