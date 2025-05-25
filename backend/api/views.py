@@ -3,6 +3,7 @@
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
+from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
@@ -38,7 +39,7 @@ from .serializers import (
     UserCreateSerializer,
     UserSerializer,
 )
-from .filters import IngredientFilter, RecipeFilter
+from filters import IngredientFilter, RecipeFilterSet
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -167,37 +168,32 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class TagViewSet(viewsets.ModelViewSet):
-    """ViewSet для работы с тегами."""
+class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-
-    def get_permissions(self):
-        """Разрешения для разных методов."""
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [IsAdminUser()]
-        return [AllowAny()]
+    pagination_class = None
+    permission_classes = (AllowAny,)
 
 
-class IngredientViewSet(viewsets.ModelViewSet):
-    """ViewSet для работы с ингредиентами."""
+class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
-    filterset_class = IngredientFilter
-
-    def get_permissions(self):
-        """Разрешения для разных методов."""
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [IsAdminUser()]
-        return [AllowAny()]
+    filter_backends = (IngredientFilter,)
+    search_fields = ('^name',)
+    permission_classes = (AllowAny,)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
-    """ViewSet для работы с рецептами."""
-    queryset = Recipe.objects.prefetch_related('tags').all()
+    queryset = (
+        Recipe.objects.prefetch_related('tags', 'ingredients')
+        .select_related('author')
+        .all()
+    )
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = RecipeFilterSet
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
-    filterset_class = RecipeFilter
+
 
     def get_serializer_class(self):
         """Возвращает класс сериализатора в зависимости от действия."""
