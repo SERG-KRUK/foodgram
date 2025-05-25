@@ -1,8 +1,8 @@
 """View-классы для обработки запросов API приложения recipes."""
 
 from django.db.models import Sum
-from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import get_object_or_404
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect
 
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
@@ -27,6 +27,7 @@ from recipes.models import (
     generate_hash,
 )
 from .permissions import IsAuthorOrReadOnly
+from .filters import RecipeFilter, IngredientFilter
 from .serializers import (
     IngredientSerializer,
     PasswordSerializer,
@@ -168,6 +169,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 class TagViewSet(viewsets.ModelViewSet):
     """ViewSet для работы с тегами."""
+
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     
@@ -180,10 +182,13 @@ class TagViewSet(viewsets.ModelViewSet):
 
 class IngredientViewSet(viewsets.ModelViewSet):
     """ViewSet для работы с ингредиентами."""
+
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
-    
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = IngredientFilter
+
     def get_permissions(self):
         """Разрешения для разных методов."""
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
@@ -204,34 +209,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     queryset = Recipe.objects.all()
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = RecipeFilter
 
     def get_queryset(self):
-        """Фильтрация рецептов по различным параметрам."""
-        queryset = super().get_queryset()
-        user = self.request.user
-
-        # Фильтр по автору
-        author_id = self.request.query_params.get('author')
-        if author_id:
-            queryset = queryset.filter(author__id=author_id)
-
-        # Фильтр по тегам
-        tags = self.request.query_params.getlist('tags')
-        if tags:
-            queryset = queryset.filter(tags__slug__in=tags).distinct()
-
-        # Фильтр по корзине покупок
-        is_in_shopping_cart = self.request.query_params.get(
-            'is_in_shopping_cart')
-        if is_in_shopping_cart and user.is_authenticated:
-            queryset = queryset.filter(shopping_cart__user=user)
-
-        # Фильтр по избранному
-        is_favorited = self.request.query_params.get('is_favorited')
-        if is_favorited and user.is_authenticated:
-            queryset = queryset.filter(favorites__user=user)
-
-        return queryset
+        """ViewSet для работы с рецептами."""
+    queryset = Recipe.objects.all()
+    permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = RecipeFilter
 
     def get_serializer_class(self):
         """Возвращает класс сериализатора в зависимости от действия."""
@@ -359,9 +345,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
             'short-link': request.build_absolute_uri(
                 f'/s/{recipe.short_link}/')
         })
-    
-    @action(detail=False, methods=['get'], url_path='s/(?P<short_link>[^/.]+)')
-    def by_short_link(self, request, short_link=None):
-        """Обработка коротких ссылок через ViewSet."""
-        recipe = get_object_or_404(self.get_queryset(), short_link=short_link)
-        return HttpResponseRedirect(f'/api/recipes/{recipe.pk}/')
+
+def recipe_by_short_link(request, short_link):
+    """Перенаправление по короткой ссылке на полный URL рецепта."""
+    recipe = get_object_or_404(Recipe, short_link=short_link)
+    return redirect(f'/recipes/{recipe.pk}/')
