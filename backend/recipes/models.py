@@ -266,12 +266,7 @@ class Subscription(models.Model):
         User, 
         on_delete=models.CASCADE, 
         related_name='following' 
-    ) 
-
-    def clean(self): 
-        """функция с валидацией подписки.""" 
-        if self.user == self.author: 
-            raise ValidationError("Нельзя подписаться на самого себя") 
+    )
 
     def save(self, *args, **kwargs): 
         """функция с сохранением подписки.""" 

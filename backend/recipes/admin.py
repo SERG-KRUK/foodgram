@@ -134,7 +134,7 @@ class SubscriptionAdminForm(ModelForm):
 
         if user and author and user == author: 
             raise ValidationError("Нельзя подписаться на самого себя") 
-        return cleaned_data 
+        return cleaned_data
 
 @admin.register(Subscription) 
 class SubscriptionAdmin(admin.ModelAdmin): 
