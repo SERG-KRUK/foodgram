@@ -92,7 +92,8 @@ class RecipeAdminForm(ModelForm):
         if not self.instance.pk and not self.cleaned_data.get('ingredients'):
             # Проверяем, есть ли ингредиенты во inline-формах
             if 'recipeingredient_set-TOTAL_FORMS' in self.data:
-                total_forms = int(self.data['recipeingredient_set-TOTAL_FORMS'])
+                total_forms = int(
+                    self.data['recipeingredient_set-TOTAL_FORMS'])
                 if total_forms == 0:
                     raise ValidationError("Добавьте хотя бы один ингредиент")
         return cleaned_data
