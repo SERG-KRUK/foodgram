@@ -2,6 +2,7 @@
 
 from django.db.models import Sum
 from django.http import HttpResponse
+from django_filters.rest_framework import DjangoFilterBackend 
 from django.shortcuts import get_object_or_404, redirect
 
 from rest_framework import serializers, status, viewsets
@@ -186,7 +187,7 @@ class IngredientViewSet(viewsets.ModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
-    filter_backends = (filters.DjangoFilterBackend,)
+    filter_backends = [DjangoFilterBackend]
     filterset_class = IngredientFilter
 
     def get_permissions(self):
@@ -195,29 +196,20 @@ class IngredientViewSet(viewsets.ModelViewSet):
             return [IsAdminUser()]
         return [AllowAny()]
 
-    def get_queryset(self):
-        """Фильтрация ингредиентов по имени."""
-        queryset = super().get_queryset()
-        name = self.request.query_params.get('name')
-        if name:
-            queryset = queryset.filter(name__istartswith=name)
-        return queryset
-
 
 class RecipeViewSet(viewsets.ModelViewSet):
     """ViewSet для работы с рецептами."""
 
     queryset = Recipe.objects.all()
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
-    filter_backends = (filters.DjangoFilterBackend,)
+    filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
 
-    def get_queryset(self):
-        """ViewSet для работы с рецептами."""
-    queryset = Recipe.objects.all()
-    permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
-    filter_backends = (filters.DjangoFilterBackend,)
-    filterset_class = RecipeFilter
+    def get_serializer_class(self):
+        """Возвращает класс сериализатора в зависимости от действия."""
+        if self.action in ['create', 'update', 'partial_update']:
+            return RecipeCreateSerializer
+        return RecipeSerializer
 
     def get_serializer_class(self):
         """Возвращает класс сериализатора в зависимости от действия."""

@@ -29,6 +29,7 @@ class RecipeFilter(filters.FilterSet):
             return queryset.filter(favorites__user=self.request.user)
         return queryset
 
+
 class IngredientFilter(filters.FilterSet):
     name = filters.CharFilter(method='filter_name')
 
