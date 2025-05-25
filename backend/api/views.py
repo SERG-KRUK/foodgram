@@ -211,12 +211,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return RecipeCreateSerializer
         return RecipeSerializer
 
-    def get_serializer_class(self):
-        """Возвращает класс сериализатора в зависимости от действия."""
-        if self.action in ['create', 'update', 'partial_update']:
-            return RecipeCreateSerializer
-        return RecipeSerializer
-
     def perform_create(self, serializer):
         """Создание рецепта с указанием текущего пользователя как автора."""
         serializer.save(author=self.request.user)
