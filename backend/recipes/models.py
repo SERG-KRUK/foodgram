@@ -270,8 +270,11 @@ class Subscription(models.Model):
 
     def clean(self):
         """функция с валидацией подписки."""
+        super().clean()  # Важно: вызываем родительский clean()
         if self.user == self.author:
-            raise ValidationError("Нельзя подписаться на самого себя")
+            raise ValidationError(
+                {'author': "Нельзя подписаться на самого себя"}
+            )
 
     def save(self, *args, **kwargs):
         """функция с сохранением подписки."""
@@ -279,8 +282,6 @@ class Subscription(models.Model):
         super().save(*args, **kwargs)
 
     class Meta:
-        """Мета-класс для модели Subscription."""
-
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
         constraints = [
@@ -291,7 +292,6 @@ class Subscription(models.Model):
         ]
 
     def __str__(self):
-        """Возвращает строковое представление подписки."""
         return f"{self.user} подписан на {self.author}"
 
 
