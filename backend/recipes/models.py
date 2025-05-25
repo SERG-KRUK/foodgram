@@ -254,45 +254,44 @@ class ShoppingCart(models.Model):
         return f"{self.user}: {self.recipe}"
 
 
-class Subscription(models.Model):
-    """Модель подписки пользователей друг на друга."""
+class Subscription(models.Model): 
+    """Модель подписки пользователей друг на друга.""" 
 
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='follower'
-    )
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='following'
-    )
+    user = models.ForeignKey( 
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='follower' 
+    ) 
+    author = models.ForeignKey( 
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='following' 
+    ) 
 
-    def clean(self):
-        """функция с валидацией подписки."""
-        super().clean()  # Важно: вызываем родительский clean()
-        if self.user == self.author:
-            raise ValidationError(
-                {'author': "Нельзя подписаться на самого себя"}
-            )
+    def clean(self): 
+        """функция с валидацией подписки.""" 
+        if self.user == self.author: 
+            raise ValidationError("Нельзя подписаться на самого себя") 
 
-    def save(self, *args, **kwargs):
-        """функция с сохранением подписки."""
-        self.full_clean()
-        super().save(*args, **kwargs)
+    def save(self, *args, **kwargs): 
+        """функция с сохранением подписки.""" 
+        self.full_clean() 
+        super().save(*args, **kwargs) 
 
-    class Meta:
-        verbose_name = 'Подписка'
-        verbose_name_plural = 'Подписки'
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user', 'author'],
-                name='unique_subscription'
-            )
-        ]
+    class Meta: 
+        """Мета-класс для модели Subscription.""" 
+ 
+        verbose_name = 'Подписка' 
+        verbose_name_plural = 'Подписки' 
+        constraints = [ 
+            models.UniqueConstraint( 
+                fields=['user', 'author'], 
+                name='unique_subscription' 
+            ) 
+        ] 
 
-    def __str__(self):
-        """Возвращает строковое представление подписки."""
+    def __str__(self): 
+        """Возвращает строковое представление подписки.""" 
         return f"{self.user} подписан на {self.author}"
 
 
