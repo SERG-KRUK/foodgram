@@ -77,32 +77,44 @@ class RecipeIngredientInline(admin.TabularInline):
     min_num = 1 
 
 
-class RecipeAdminForm(ModelForm): 
-    """Форма рецепта с валидацией ингредиентов.""" 
+class RecipeAdminForm(ModelForm):
+    """Форма рецепта с валидацией ингредиентов."""
 
-    def clean(self): 
-        """функиця рецепта с валидацией ингредиентов.""" 
-        cleaned_data = super().clean() 
-        if not self.instance.pk and not self.cleaned_data.get('ingredients'): 
-            raise ValidationError("Добавьте хотя бы один ингредиент") 
-        return cleaned_data 
+    def clean(self):
+        """Функция рецепта с валидацией ингредиентов."""
+        cleaned_data = super().clean()
+
+        # Проверяем только при создании нового рецепта
+        if not self.instance.pk:
+            # Проверяем, были ли отправлены данные inline-форм
+            if 'recipeingredient_set-TOTAL_FORMS' in self.data:
+                total_forms = int(
+                    self.data['recipeingredient_set-TOTAL_FORMS'])
+                if total_forms == 0:
+                    raise ValidationError("Добавьте хотя бы один ингредиент")
+
+        return cleaned_data
 
 
-@admin.register(Recipe) 
-class RecipeAdmin(admin.ModelAdmin): 
-    """Административная панель для модели рецептов.""" 
+@admin.register(Recipe)
+class RecipeAdmin(admin.ModelAdmin):
+    """Административная панель для модели рецептов."""
 
-    form = RecipeAdminForm 
-    list_display = ('name', 'author', 'cooking_time', 'favorites_count') 
-    list_filter = ('tags', 'author') 
-    search_fields = ('name', 'author__username',) 
-    inlines = [RecipeIngredientInline] 
-    exclude = ('ingredients',) 
+    form = RecipeAdminForm
+    list_display = ('name', 'author', 'cooking_time', 'favorites_count')
+    list_filter = ('tags', 'author')
+    search_fields = ('name', 'author__username',)
+    inlines = [RecipeIngredientInline]
+    exclude = ('ingredients',)
 
-    @display(description='В избранном') 
-    def favorites_count(self, obj): 
-        """Возвращает количество добавлений рецепта в избранное.""" 
-        return obj.favorites.count() 
+    def save_model(self, request, obj, form, change):
+        """Переопределяем сохранение модели для обработки ингредиентов."""
+        super().save_model(request, obj, form, change)
+
+    @display(description='В избранном')
+    def favorites_count(self, obj):
+        """Возвращает количество добавлений рецепта в избранное."""
+        return obj.favorites.count()
 
 
 @admin.register(Ingredient) 
