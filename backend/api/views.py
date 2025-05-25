@@ -2,7 +2,6 @@
 
 from django.db.models import Sum
 from django.http import HttpResponse
-from django_filters.rest_framework import DjangoFilterBackend 
 from django.shortcuts import get_object_or_404, redirect
 
 from rest_framework import serializers, status, viewsets
@@ -28,7 +27,6 @@ from recipes.models import (
     generate_hash,
 )
 from .permissions import IsAuthorOrReadOnly
-from .filters import RecipeFilter, IngredientFilter
 from .serializers import (
     IngredientSerializer,
     PasswordSerializer,
@@ -40,6 +38,7 @@ from .serializers import (
     UserCreateSerializer,
     UserSerializer,
 )
+from .filters import IngredientFilter, RecipeFilter
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -170,10 +169,9 @@ class UserViewSet(viewsets.ModelViewSet):
 
 class TagViewSet(viewsets.ModelViewSet):
     """ViewSet для работы с тегами."""
-
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    
+
     def get_permissions(self):
         """Разрешения для разных методов."""
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
@@ -183,11 +181,9 @@ class TagViewSet(viewsets.ModelViewSet):
 
 class IngredientViewSet(viewsets.ModelViewSet):
     """ViewSet для работы с ингредиентами."""
-
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
-    filter_backends = [DjangoFilterBackend]
     filterset_class = IngredientFilter
 
     def get_permissions(self):
@@ -199,10 +195,8 @@ class IngredientViewSet(viewsets.ModelViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     """ViewSet для работы с рецептами."""
-
     queryset = Recipe.objects.all()
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
-    filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
 
     def get_serializer_class(self):
