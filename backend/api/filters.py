@@ -7,16 +7,13 @@ from recipes.models import Recipe, Ingredient
 class RecipeFilter(filters.FilterSet):
     """Filter for view class."""
     author = filters.NumberFilter(field_name='author__id')
-    tags = filters.CharFilter(method='filter_tags')
+    tags = filters.AllValuesMultipleFilter(field_name='tags__slug')
     is_in_shopping_cart = filters.BooleanFilter(method='filter_shopping_cart')
     is_favorited = filters.BooleanFilter(method='filter_favorited')
 
     class Meta:
         model = Recipe
         fields = ['author', 'tags', 'is_in_shopping_cart', 'is_favorited']
-
-    def filter_tags(self, queryset, name, value):
-        return queryset.filter(tags__slug__in=value.split(',')).distinct()
 
     def filter_shopping_cart(self, queryset, name, value):
         if value and self.request.user.is_authenticated:
