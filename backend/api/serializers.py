@@ -104,30 +104,37 @@ class TagSerializer(serializers.ModelSerializer):
 
 class IngredientSerializer(serializers.ModelSerializer):
     """Serializer for ingredients."""
-
     class Meta:
-        """Meta class for IngredientSerializer."""
-
         model = Ingredient
         fields = '__all__'
 
 
-class RecipeIngredientSerializer(serializers.ModelSerializer):
-    """Serializer for recipe ingredients."""
-
-    id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
-    name = serializers.ReadOnlyField(source='ingredient.name')
-    measurement_unit = serializers.ReadOnlyField(
-        source='ingredient.measurement_unit')
+class RecipeIngredientReadSerializer(serializers.ModelSerializer):
+    """Serializer for reading recipe ingredients."""
+    id = serializers.IntegerField(source='ingredient.id', read_only=True)
+    name = serializers.CharField(source='ingredient.name', read_only=True)
+    measurement_unit = serializers.CharField(
+        source='ingredient.measurement_unit',
+        read_only=True
+    )
 
     class Meta:
-        """Meta class for RecipeIngredientSerializer."""
-
         model = RecipeIngredient
         fields = ('id', 'name', 'measurement_unit', 'amount')
+        read_only_fields = fields
+
+
+class RecipeIngredientWriteSerializer(serializers.ModelSerializer):
+    """Serializer for writing recipe ingredients."""
+    id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
+    amount = serializers.IntegerField()
+
+    class Meta:
+        model = RecipeIngredient
+        fields = ('id', 'amount')
 
     def validate_amount(self, value):
-        """Проверяет пользователя."""
+        """Проверяет количество ингредиента."""
         try:
             if int(value) <= 0:
                 raise serializers.ValidationError(
@@ -142,7 +149,6 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
 class RecipeSerializer(serializers.ModelSerializer):
     """Serializer for recipe details."""
-
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     tags = TagSerializer(many=True, read_only=True)
@@ -152,8 +158,6 @@ class RecipeSerializer(serializers.ModelSerializer):
     short_link = serializers.CharField(read_only=True)
 
     class Meta:
-        """Meta class for RecipeSerializer."""
-
         model = Recipe
         fields = [
             'id', 'tags', 'author', 'ingredients', 'name',
@@ -185,22 +189,19 @@ class RecipeSerializer(serializers.ModelSerializer):
         """Функция сортирует ингредиенты по ID."""
         ingredients = obj.recipe_ingredients.select_related(
             'ingredient').order_by('id')
-        return RecipeIngredientSerializer(ingredients, many=True).data
+        return RecipeIngredientReadSerializer(ingredients, many=True).data
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
     """Serializer for recipe creation."""
-
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Tag.objects.all()
     )
-    ingredients = RecipeIngredientSerializer(many=True, required=False)
+    ingredients = RecipeIngredientWriteSerializer(many=True, required=False)
     image = Base64ImageField(required=False)
 
     class Meta:
-        """Meta class for RecipeCreateSerializer."""
-
         model = Recipe
         fields = (
             'id', 'tags', 'ingredients', 'name',
