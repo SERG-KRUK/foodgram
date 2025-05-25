@@ -167,14 +167,6 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-@api_view(['GET'])
-def get_ingredients(request):
-    """Получение списка всех ингредиентов."""
-    ingredients = Ingredient.objects.all().values(
-        'id', 'name', 'measurement_unit')
-    return Response(list(ingredients))
-
-
 class TagViewSet(viewsets.ModelViewSet):
     """ViewSet для работы с тегами."""
     queryset = Tag.objects.all()
@@ -368,21 +360,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
             'short-link': request.build_absolute_uri(
                 f'/s/{recipe.short_link}/')
         })
+    
+    @action(detail=False, methods=['get'], url_path='s/(?P<short_link>[^/.]+)')
+    def by_short_link(self, request, short_link=None):
+        """Обработка коротких ссылок на рецепты с редиректом."""
+        recipe = get_object_or_404(Recipe, short_link=short_link)
 
-
-def recipe_by_short_link(request, short_link):
-    """Перенаправление по короткой ссылке на полный URL рецепта."""
-    recipe = get_object_or_404(Recipe, short_link=short_link)
-    return redirect(f'/recipes/{recipe.pk}/')
-
-
-class RecipeDetailView(APIView):
-    """APIView для получения детальной информации о рецепте."""
-
-    permission_classes = [AllowAny]
-
-    def get(self, request, pk):
-        """Получение детальной информации о рецепте."""
-        recipe = get_object_or_404(Recipe, pk=pk)
-        serializer = RecipeSerializer(recipe, context={'request': request})
-        return Response(serializer.data)
+        if request.accepted_renderer.format == 'api':
+            serializer = self.get_serializer(recipe)
+            return Response(serializer.data)
+        return redirect(f'/recipes/{recipe.pk}/')
