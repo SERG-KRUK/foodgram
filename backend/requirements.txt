@@ -12,6 +12,7 @@ Django==4.2.21
 django-bootstrap5==22.2
 django-cors-headers==4.7.0
 django-filter==25.1
+django-extra-fields==3.0.2
 django_debug_toolbar==3.8.1
 djangorestframework==3.16.0
 djangorestframework_simplejwt==5.5.0
