@@ -52,6 +52,10 @@ class User(AbstractUser):
         verbose_name='Аватар',
         blank=True
     )
+    is_subscribed = models.BooleanField(
+        default=False,
+        verbose_name='Подписка',
+    )
 
     class Meta:
         """Мета-класс для модели User."""
@@ -276,13 +280,13 @@ class Subscription(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='subscriptions',
+        related_name='follower',
         verbose_name='Подписчик'
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='subscribers',
+        related_name='following',
         verbose_name='Автор'
     )
 
