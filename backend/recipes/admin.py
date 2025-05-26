@@ -5,6 +5,7 @@ from django.contrib.admin import display
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.safestring import mark_safe
 from django.contrib.auth.models import Group
+from django.db.models import Count
 
 from .models import (
     Favorite,
@@ -35,6 +36,12 @@ class UserAdmin(BaseUserAdmin):
     @display(description='Подписчиков')
     def subscribers_count(self, obj):
         return obj.subscribers.count()
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(
+            recipes_count=Count('recipes'),
+            subscribers_count=Count('subscribers')
+        )
 
 
 class RecipeIngredientInline(admin.TabularInline):
@@ -74,6 +81,11 @@ class RecipeAdmin(admin.ModelAdmin):
     @display(description='В избранном')
     def favorites_count(self, obj):
         return obj.favorites.count()
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related(
+            'ingredients', 'tags', 'favorites'
+        )
 
 
 @admin.register(Ingredient)

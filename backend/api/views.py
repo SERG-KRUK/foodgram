@@ -33,6 +33,7 @@ from .serializers import (
     SubscriptionSerializer,
     TagSerializer,
     IngredientSerializer,
+    UserSerializer
 )
 from .filters import IngredientFilter, RecipeFilterSet
 
@@ -42,6 +43,12 @@ class UserViewSet(viewsets.ModelViewSet):
     
     queryset = User.objects.all()
     serializer_class = SubscriptionListSerializer
+
+    @action(detail=False, methods=['get'])
+    def me(self, request):
+        """Получение данных текущего пользователя."""
+        serializer = UserSerializer(request.user, context={'request': request})
+        return Response(serializer.data)
 
     @action(detail=False, methods=('get',), permission_classes=(
             IsAuthenticated,))
