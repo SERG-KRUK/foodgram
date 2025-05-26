@@ -1,12 +1,13 @@
 """Модуль для загрузки ингридиентов по умолчанию."""
 
-from django.core.management.base import BaseCommand
 import csv
 import json
 import os
 
-from recipes.models import Ingredient
 from django.conf import settings
+from django.core.management.base import BaseCommand
+
+from recipes.models import Ingredient
 
 
 class Command(BaseCommand):
@@ -32,34 +33,52 @@ class Command(BaseCommand):
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 reader = csv.reader(f)
-                count = 0
+                ingredients = []
                 for row in reader:
                     if len(row) != 2:
                         continue
 
                     name, measurement_unit = row
-                    Ingredient.objects.get_or_create(
-                        name=name.strip(),
-                        measurement_unit=measurement_unit.strip()
+                    ingredients.append(
+                        Ingredient(
+                            name=name.strip(),
+                            measurement_unit=measurement_unit.strip()
+                        )
                     )
-                    count += 1
+                
+                Ingredient.objects.bulk_create(
+                    ingredients,
+                    ignore_conflicts=True
+                )
                 self.stdout.write(
                     self.style.SUCCESS(
-                        f'Успешно загружено {count} ингредиентов из CSV'))
+                        f'Успешно загружено {len(ingredients)}'
+                        f'ингредиентов из JSON'))
         except Exception as e:
             self.stdout.write(
                 self.style.ERROR(f'Ошибка при загрузке CSV: {str(e)}'))
 
     def load_from_json(self, file_path):
         """Загружает предустановленные теги в базу данных."""
-        with open(file_path, 'r', encoding='utf-8') as f:
-            ingredients = json.load(f)
-            count = 0
-            for item in ingredients:
-                Ingredient.objects.get_or_create(
-                    name=item['name'],
-                    measurement_unit=item['measurement_unit']
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                ingredients_data = json.load(f)
+                ingredients = [
+                    Ingredient(
+                        name=item['name'],
+                        measurement_unit=item['measurement_unit']
+                    )
+                    for item in ingredients_data
+                ]
+                
+                Ingredient.objects.bulk_create(
+                    ingredients,
+                    ignore_conflicts=True
                 )
-                count += 1
-            self.stdout.write(self.style.SUCCESS(
-                f'Успешно загружено {count} ингредиентов из JSON'))
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f'Успешно загружено {len(ingredients)}'
+                        f'ингредиентов из JSON'))
+        except Exception as e:
+            self.stdout.write(
+                self.style.ERROR(f'Ошибка при загрузке JSON: {str(e)}'))

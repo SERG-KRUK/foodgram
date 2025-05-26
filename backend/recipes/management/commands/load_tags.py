@@ -1,6 +1,7 @@
 """Модуль для загрузки тегов по умолчанию."""
 
 from django.core.management.base import BaseCommand
+
 from recipes.models import Tag
 
 

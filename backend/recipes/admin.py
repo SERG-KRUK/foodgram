@@ -3,13 +3,12 @@
 from django.contrib import admin
 from django.contrib.admin import display
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from django.core.exceptions import ValidationError
-from django.forms import ModelForm
+from django.utils.safestring import mark_safe
+from django.contrib.auth.models import Group
 
 from .models import (
     Favorite,
     Ingredient,
-    LinkMapped,
     Recipe,
     RecipeIngredient,
     ShoppingCart,
@@ -19,101 +18,61 @@ from .models import (
 )
 
 
-class UserCreationForm(ModelForm):
-    """Форма создания пользователя с обязательными ФИО."""
-
-    class Meta:
-        """Мета-класс для создания пользователя."""
-
-        model = User
-        fields = ('email', 'username', 'first_name', 'last_name', 'password')
-
-    def clean(self):
-        """функция валидации пользователя."""
-        cleaned_data = super().clean()
-        if not cleaned_data.get('first_name'):
-            raise ValidationError("Имя обязательно для заполнения")
-        if not cleaned_data.get('last_name'):
-            raise ValidationError("Фамилия обязательна для заполнения")
-        return cleaned_data
-
-
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
     """Административная панель для модели пользователя."""
 
-    add_form = UserCreationForm
-    add_fieldsets = (
-        (None, {
-            'classes': ('wide',),
-            'fields': ('email', 'username',
-                       'first_name', 'last_name', 'password1', 'password2'),
-        }),
-    )
-
-    list_display = ('email', 'username', 'first_name', 'last_name', 'is_staff')
+    list_display = ('email', 'username', 'first_name', 'last_name', 
+                    'is_staff', 'recipes_count', 'subscribers_count')
     list_filter = ('is_staff', 'is_superuser', 'is_active')
     search_fields = ('email', 'username', 'first_name', 'last_name')
     ordering = ('email',)
 
+    @display(description='Рецептов')
+    def recipes_count(self, obj):
+        return obj.recipes.count()
 
-class RecipeIngredientInlineForm(ModelForm):
-    """Форма для ингредиентов с валидацией количества."""
-
-    def clean_amount(self):
-        """функция для ингредиентов с валидацией количества."""
-        amount = self.cleaned_data.get('amount')
-        if amount <= 0:
-            raise ValidationError("Количество должно быть больше 0")
-        return amount
+    @display(description='Подписчиков')
+    def subscribers_count(self, obj):
+        return obj.subscribers.count()
 
 
 class RecipeIngredientInline(admin.TabularInline):
     """Инлайн для отображения связи рецептов и ингредиентов."""
-
     model = RecipeIngredient
-    form = RecipeIngredientInlineForm
     extra = 1
     min_num = 1
-
-
-class RecipeAdminForm(ModelForm):
-    """Форма рецепта с валидацией ингредиентов."""
-
-    def clean(self):
-        """Функция рецепта с валидацией ингредиентов."""
-        cleaned_data = super().clean()
-
-        # Проверяем только при создании нового рецепта
-        if not self.instance.pk:
-            # Проверяем, были ли отправлены данные inline-форм
-            if 'recipeingredient_set-TOTAL_FORMS' in self.data:
-                total_forms = int(
-                    self.data['recipeingredient_set-TOTAL_FORMS'])
-                if total_forms == 0:
-                    raise ValidationError("Добавьте хотя бы один ингредиент")
-
-        return cleaned_data
 
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     """Административная панель для модели рецептов."""
 
-    form = RecipeAdminForm
-    list_display = ('name', 'author', 'cooking_time', 'favorites_count')
+    list_display = ('name', 'author', 'cooking_time', 'image_preview',
+                    'ingredients_list', 'tags_list', 'favorites_count')
     list_filter = ('tags', 'author')
-    search_fields = ('name', 'author__username',)
+    search_fields = ('name', 'author__username')
     inlines = [RecipeIngredientInline]
     exclude = ('ingredients',)
 
-    def save_model(self, request, obj, form, change):
-        """Переопределяем сохранение модели для обработки ингредиентов."""
-        super().save_model(request, obj, form, change)
+    @display(description='Изображение')
+    def image_preview(self, obj):
+        if obj.image:
+            return mark_safe(
+                f'<img src="{obj.image.url}" width="80" height="60">')
+        return "Нет изображения"
+
+    @display(description='Ингредиенты')
+    def ingredients_list(self, obj):
+        return ", ".join(
+            [ingredient.name for ingredient in obj.ingredients.all()])
+
+    @display(description='Теги')
+    def tags_list(self, obj):
+        return ", ".join([tag.name for tag in obj.tags.all()])
 
     @display(description='В избранном')
     def favorites_count(self, obj):
-        """Возвращает количество добавлений рецепта в избранное."""
         return obj.favorites.count()
 
 
@@ -135,25 +94,10 @@ class TagAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
 
 
-class SubscriptionAdminForm(ModelForm):
-    """Форма подписки с проверкой на самоподписку."""
-
-    def clean(self):
-        """Форма подписки с проверкой на самоподписку."""
-        cleaned_data = super().clean()
-        user = cleaned_data.get('user')
-        author = cleaned_data.get('author')
-
-        if user and author and user == author:
-            raise ValidationError("Нельзя подписаться на самого себя")
-        return cleaned_data
-
-
 @admin.register(Subscription)
 class SubscriptionAdmin(admin.ModelAdmin):
     """Административная панель для модели подписок."""
 
-    form = SubscriptionAdminForm
     list_display = ('user', 'author')
     list_filter = ('user',)
 
@@ -174,4 +118,4 @@ class ShoppingCartAdmin(admin.ModelAdmin):
     list_filter = ('user',)
 
 
-admin.site.register(LinkMapped)
+admin.site.unregister(Group)
