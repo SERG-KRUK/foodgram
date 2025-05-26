@@ -1,4 +1,4 @@
-"""Filters for recipes application."""
+"""Фильтры для проекта."""
 
 from django_filters.rest_framework import FilterSet
 from django_filters.rest_framework.filters import (
@@ -11,13 +11,13 @@ from recipes.models import Recipe, Tag
 
 
 class IngredientFilter(SearchFilter):
-    """IngredientFilter for recipes application."""
+    """IngredientFilter фильтр для ингридиентов."""
 
     search_param = 'name'
 
 
 class RecipeFilterSet(FilterSet):
-    """RecipeFilterSet for recipes application."""
+    """RecipeFilterSet фильтр для рецептов.."""
 
     tags = ModelMultipleChoiceFilter(
         field_name='tags__slug',
@@ -34,13 +34,13 @@ class RecipeFilterSet(FilterSet):
         fields = ('tags', 'author', 'is_favorited', 'is_in_shopping_cart')
 
     def get_is_favorited(self, recipes, name, value):
-        """Filter for favorited."""
+        """Filter фильтр для избранного."""
         if self.request.user.is_authenticated and value:
-            return recipes.filter(favorites__user=self.request.user)
+            return recipes.filter(favorite__user=self.request.user)
         return recipes
 
     def get_is_in_shopping_cart(self, recipes, name, value):
-        """Filter for shopping_cart."""
+        """Filter фильтр для корзины покупок."""
         if self.request.user.is_authenticated and value:
-            return recipes.filter(shopping_cart__user=self.request.user)
+            return recipes.filter(shoppingcart__user=self.request.user)
         return recipes

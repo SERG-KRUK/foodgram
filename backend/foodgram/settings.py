@@ -52,7 +52,7 @@ ROOT_URLCONF = 'foodgram.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],  # Указываем явный путь
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -68,19 +68,19 @@ TEMPLATES = [
 BASE_URL = 'http://localhost:8000'
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost",
-    "http://127.0.0.1",
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-    "https://foodgramyandex.ddns.net",
+    'http://localhost',
+    'http://127.0.0.1',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+    'https://foodgramyandex.ddns.net',
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost",
-    "http://127.0.0.1",
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-    "https://foodgramyandex.ddns.net",
+    'http://localhost',
+    'http://127.0.0.1',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+    'https://foodgramyandex.ddns.net',
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -154,7 +154,6 @@ DJOSER = {
     'LOGIN_FIELD': 'email',
     'USER_CREATE_PASSWORD_RETYPE': False,  # Отключить подтверждение пароля
     'SERIALIZERS': {
-        'user_create': 'api.serializers.UserCreateSerializer',
         'user': 'api.serializers.UserSerializer',
         'current_user': 'api.serializers.UserSerializer',
     },
@@ -170,7 +169,7 @@ AUTH_USER_MODEL = 'recipes.User'
 
 
 GRAPH_MODELS = {
-    'app_labels': ["recipes", "users"],
+    'app_labels': ['recipes', 'users'],
     'group_models': True,
     'output': 'er_diagram.png',
 }
@@ -184,9 +183,9 @@ USE_L10N = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-ADMIN_SITE_HEADER = "Foodgram Administration"
-ADMIN_SITE_TITLE = "Foodgram Admin Portal"
-ADMIN_INDEX_TITLE = "Welcome to Foodgram Admin"
+ADMIN_SITE_HEADER = 'Foodgram Administration'
+ADMIN_SITE_TITLE = 'Foodgram Admin Portal'
+ADMIN_INDEX_TITLE = 'Welcome to Foodgram Admin'
 
 
 AdminSite.site_header = ADMIN_SITE_HEADER

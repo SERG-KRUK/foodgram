@@ -10,7 +10,6 @@ from api.views import recipe_by_short_link
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
-    path('api/recipes/', include('recipes.urls')),
     path(
         's/<slug:short_link>/', recipe_by_short_link, name='recipe-short-link')
 ]
