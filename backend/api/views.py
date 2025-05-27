@@ -51,16 +51,20 @@ class UserViewSet(DjoserUserViewSet):
         serializer = UserSerializer(request.user, context={'request': request})
         return Response(serializer.data)
 
-    @action(detail=False, methods=('get',), permission_classes=(
-            IsAuthenticated,))
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def subscriptions(self, request):
-        """Возвращает список подписок текущего пользователя."""
-        queryset = request.user.follower.select_related('author').annotate(
-            recipes_count=Count('author__recipes')
-        )
-        page = self.paginate_queryset(queryset)
+        """Список подписок с пагинацией."""
+        authors = User.objects.filter(
+            following__user=request.user
+        ).annotate(
+            recipes_count=Count('recipes')
+        ).prefetch_related('recipes')
+        
+        page = self.paginate_queryset(authors)
         serializer = SubscriptionListSerializer(
-            page, many=True, context={'request': request}
+            page,
+            many=True,
+            context={'request': request}
         )
         return self.get_paginated_response(serializer.data)
 
@@ -71,9 +75,10 @@ class UserViewSet(DjoserUserViewSet):
         serializer_class=SubscriptionSerializer
     )
     def subscribe(self, request, pk=None):
-        """Обработка подписки на автора."""
+        """Подписка на автора."""
+        author = get_object_or_404(User, pk=pk)
         serializer = self.get_serializer(
-            data={'author': pk},
+            data={'author': author.id},
             context={'request': request}
         )
         serializer.is_valid(raise_exception=True)
@@ -82,13 +87,13 @@ class UserViewSet(DjoserUserViewSet):
 
     @subscribe.mapping.delete
     def unsubscribe(self, request, pk=None):
-        """Обработка отписки от автора."""
+        """Отписка от автора."""
         deleted = Subscription.objects.filter(
             user=request.user,
             author_id=pk
         ).delete()
         return Response(
-            status=status.HTTP_204_NO_CONTENT if deleted[0]
+            status=status.HTTP_204_NO_CONTENT if deleted[0] 
             else status.HTTP_400_BAD_REQUEST
         )
 

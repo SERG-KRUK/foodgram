@@ -203,44 +203,62 @@ class ShortRecipeSerializer(serializers.ModelSerializer):
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
+    """Сериализатор для подписок."""
+
+    author = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    
     class Meta:
+        """Мета сериализатора для подписок."""
         model = Subscription
         fields = '__all__'
-        extra_kwargs = {'user': {'read_only': True}}
+        extra_kwargs = {
+            'user': {'read_only': True},
+        }
 
     def validate(self, data):
-        user = self.context['request'].user
-        if user == data['author']:
+        """валидация для подписок на самого себя."""
+        request = self.context.get('request')
+        if not request:
+            raise serializers.ValidationError("Требуется запрос в контексте")
+            
+        if request.user == data['author']:
             raise serializers.ValidationError(
                 "Нельзя подписаться на самого себя")
+            
         if Subscription.objects.filter(
-                user=user, author=data['author']).exists():
+                user=request.user, author=data['author']).exists():
             raise serializers.ValidationError(
                 "Вы уже подписаны на этого автора")
+            
         return data
+
+    def to_representation(self, instance):
+        return SubscriptionListSerializer(
+            instance.author,
+            context=self.context
+        ).data
 
 
 class SubscriptionListSerializer(UserSerializer):
     """Serializer for subscriptions list."""
-    
+
     recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.IntegerField()
+    recipes_count = serializers.SerializerMethodField()
 
     class Meta(UserSerializer.Meta):
-        fields = UserSerializer.Meta.fields + (
-            'recipes', 'recipes_count'
-        )
+        fields = UserSerializer.Meta.fields + ('recipes', 'recipes_count')
 
     def get_recipes(self, obj):
+        request = self.context.get('request')
+        limit = request.query_params.get('recipes_limit') if request else None
         recipes = obj.recipes.all()
-        limit = self.context.get('recipes_limit')
         if limit:
             try:
                 recipes = recipes[:int(limit)]
             except ValueError:
                 pass
         return ShortRecipeSerializer(
-            recipes, 
-            many=True,
-            context=self.context
-        ).data
+            recipes, many=True, context=self.context).data
+
+    def get_recipes_count(self, obj):
+        return obj.recipes.count()
