@@ -51,7 +51,8 @@ class UserViewSet(DjoserUserViewSet):
         serializer = UserSerializer(request.user, context={'request': request})
         return Response(serializer.data)
 
-    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    @action(
+        detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def subscriptions(self, request):
         """Список подписок с пагинацией."""
         authors = User.objects.filter(
