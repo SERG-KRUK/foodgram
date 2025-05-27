@@ -66,42 +66,63 @@ class UserViewSet(DjoserUserViewSet):
 
     @action(
         detail=True,
-        methods=('post', 'delete'),
-        permission_classes=(IsAuthenticated,),
+        methods=['post'],
+        permission_classes=[IsAuthenticated],
         serializer_class=SubscriptionSerializer
     )
     def subscribe(self, request, pk=None):
-        """Обрабатывает подписку/отписку на автора."""
-        author = get_object_or_404(User, id=pk)
-        if request.method == 'POST':
-            serializer = self.get_serializer(
-                data={'user': request.user.id, 'author': author.id},
-                context={'request': request}
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
+        """Обработка подписки на автора."""
+        serializer = self.get_serializer(
+            data={'author': pk},
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save(user=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @subscribe.mapping.delete
+    def unsubscribe(self, request, pk=None):
+        """Обработка отписки от автора."""
         deleted = Subscription.objects.filter(
-            user=request.user, author=author
+            user=request.user,
+            author_id=pk
         ).delete()
-        if deleted[0]:
-            return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(
-            {'error': 'Подписка не найдена'}, 
-            status=status.HTTP_400_BAD_REQUEST
+            status=status.HTTP_204_NO_CONTENT if deleted[0]
+            else status.HTTP_400_BAD_REQUEST
         )
 
     @action(
-        methods=('delete',),
+        methods=['put'],
         detail=False,
         url_path='me/avatar',
-        permission_classes=(IsAuthenticated,)
+        permission_classes=[IsAuthenticated],
+        serializer_class=UserSerializer
     )
+    def avatar(self, request):
+        """Обновление аватара текущего пользователя."""
+        serializer = self.get_serializer(
+            request.user,
+            data=request.data,
+            partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    @avatar.mapping.delete
     def delete_avatar(self, request):
-        """Удаляет аватар текущего пользователя."""
-        request.user.avatar.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        """Удаление аватара текущего пользователя."""
+        user = request.user
+        if user.avatar:
+            user.avatar.delete()
+            user.avatar = None
+            user.save()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {'error': 'Аватар не найден'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):

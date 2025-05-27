@@ -203,24 +203,21 @@ class ShortRecipeSerializer(serializers.ModelSerializer):
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
-    """Serializer for subscription creation."""
-    
     class Meta:
         model = Subscription
         fields = '__all__'
+        extra_kwargs = {'user': {'read_only': True}}
 
     def validate(self, data):
-        if data['user'] == data['author']:
+        user = self.context['request'].user
+        if user == data['author']:
             raise serializers.ValidationError(
-                'Нельзя подписаться на самого себя.'
-            )
+                "Нельзя подписаться на самого себя")
+        if Subscription.objects.filter(
+                user=user, author=data['author']).exists():
+            raise serializers.ValidationError(
+                "Вы уже подписаны на этого автора")
         return data
-
-    def to_representation(self, instance):
-        return SubscriptionListSerializer(
-            instance.author,
-            context=self.context
-        ).data
 
 
 class SubscriptionListSerializer(UserSerializer):
