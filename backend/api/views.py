@@ -2,6 +2,7 @@
 
 from django.db.models import Sum, Count
 from django.http import HttpResponse
+from djoser.views import UserViewSet as DjoserUserViewSet
 from django.shortcuts import get_object_or_404, redirect
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
@@ -38,11 +39,11 @@ from .serializers import (
 from .filters import IngredientFilter, RecipeFilterSet
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(DjoserUserViewSet):
     """ViewSet для работы с пользователями и подписками."""
     
     queryset = User.objects.all()
-    serializer_class = SubscriptionListSerializer
+    serializer_class = UserSerializer
 
     @action(detail=False, methods=['get'])
     def me(self, request):
