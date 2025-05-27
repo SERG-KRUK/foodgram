@@ -3,7 +3,7 @@
 from drf_extra_fields.fields import Base64ImageField
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from djoser.serializers import UserSerializer as BaseUserSerializer
+from djoser.serializers import UserSerializer as DjoserUserSerializer
 from rest_framework import serializers
 
 from recipes.models import (
@@ -18,21 +18,24 @@ from recipes.models import (
 User = get_user_model()
 
 
-class UserSerializer(BaseUserSerializer):
+class UserSerializer(DjoserUserSerializer):
     """Serializer for user details with additional fields."""
     
     is_subscribed = serializers.SerializerMethodField()
     avatar = Base64ImageField(required=False, allow_null=True)
 
-    class Meta(BaseUserSerializer.Meta):
-        fields = BaseUserSerializer.Meta.fields + (
-            'is_subscribed', 'avatar'
-        )
+    class Meta:
+        model = User
+        fields = (*DjoserUserSerializer.Meta.fields, 'avatar', 'is_subscribed')
 
-    def get_is_subscribed(self, obj):
-        request = self.context.get('request')
-        return (request and request.user.is_authenticated
-                and obj.following.filter(user=request.user).exists())
+    def get_is_subscribed(self, author):
+        user = self.context.get('request').user
+        return (
+            user.is_authenticated
+            and Subscription.objects.filter(
+                author=author, subscriber=user
+            ).exists()
+        )
 
 
 class TagSerializer(serializers.ModelSerializer):
