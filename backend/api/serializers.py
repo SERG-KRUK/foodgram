@@ -221,26 +221,30 @@ class ShortRecipeSerializer(serializers.ModelSerializer):
 
 class SubscriptionSerializer(serializers.ModelSerializer):
     """Сериализатор для создания подписок."""
-    
+    author = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+
     class Meta:
         """Мета класс для подписок."""
         model = Subscription
         fields = ('author',)
+        extra_kwargs = {
+            'user': {'read_only': True},
+        }
 
     def validate(self, data):
         """Функция валидации подписок."""
-        user = self.context['request'].user
-        author = data['author']
-        
-        if user == author:
-            raise serializers.ValidationError(
-                "You cannot subscribe to yourself."
-            )
+        request = self.context.get('request')
+        if not request:
+            raise serializers.ValidationError("Требуется запрос")
             
-        if Subscription.objects.filter(user=user, author=author).exists():
-            raise serializers.ValidationError(
-                "You are already subscribed to this author."
-            )
+        if request.user == data['author']:
+            raise serializers.ValidationError("Нельзя подписаться на себя")
+            
+        if Subscription.objects.filter(
+            user=request.user, 
+            author=data['author']
+        ).exists():
+            raise serializers.ValidationError("Подписка уже существует")
             
         return data
 
@@ -251,7 +255,6 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             instance.author,
             context=self.context
         ).data
-
 
 class SubscriptionListSerializer(UserSerializer):
     """Сериализатор для вывода подписок."""
