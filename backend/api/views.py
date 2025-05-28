@@ -76,7 +76,6 @@ class UserViewSet(DjoserUserViewSet):
         serializer_class=SubscriptionSerializer
     )
     def subscribe(self, request, pk=None):
-        """Подписка на автора."""
         author = get_object_or_404(User, pk=pk)
         serializer = self.get_serializer(
             data={'author': author.id},
@@ -88,13 +87,12 @@ class UserViewSet(DjoserUserViewSet):
 
     @subscribe.mapping.delete
     def unsubscribe(self, request, pk=None):
-        """Отписка от автора."""
-        deleted = Subscription.objects.filter(
+        deleted, _ = Subscription.objects.filter(
             user=request.user,
             author_id=pk
         ).delete()
         return Response(
-            status=status.HTTP_204_NO_CONTENT if deleted[0] 
+            status=status.HTTP_204_NO_CONTENT if deleted 
             else status.HTTP_400_BAD_REQUEST
         )
 

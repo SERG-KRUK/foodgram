@@ -203,30 +203,29 @@ class ShortRecipeSerializer(serializers.ModelSerializer):
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
-    """Сериализатор для подписок."""
-
+    """Сериализатор для создания подписок."""
     author = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     
     class Meta:
-        """Мета сериализатора для подписок."""
         model = Subscription
-        fields = '__all__'
+        fields = ('author',)
         extra_kwargs = {
             'user': {'read_only': True},
         }
 
     def validate(self, data):
-        """валидация для подписок на самого себя."""
         request = self.context.get('request')
-        if not request:
-            raise serializers.ValidationError("Требуется запрос в контексте")
+        author = data['author']
+        
+        if not request or not request.user.is_authenticated:
+            raise serializers.ValidationError("Требуется аутентификация")
             
-        if request.user == data['author']:
+        if request.user == author:
             raise serializers.ValidationError(
                 "Нельзя подписаться на самого себя")
             
         if Subscription.objects.filter(
-                user=request.user, author=data['author']).exists():
+                user=request.user, author=author).exists():
             raise serializers.ValidationError(
                 "Вы уже подписаны на этого автора")
             
@@ -240,10 +239,9 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
 
 class SubscriptionListSerializer(UserSerializer):
-    """Serializer for subscriptions list."""
-
+    """Сериализатор для вывода подписок."""
     recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.SerializerMethodField()
+    recipes_count = serializers.IntegerField(read_only=True)
 
     class Meta(UserSerializer.Meta):
         fields = UserSerializer.Meta.fields + ('recipes', 'recipes_count')
@@ -258,7 +256,7 @@ class SubscriptionListSerializer(UserSerializer):
             except ValueError:
                 pass
         return ShortRecipeSerializer(
-            recipes, many=True, context=self.context).data
-
-    def get_recipes_count(self, obj):
-        return obj.recipes.count()
+            recipes, 
+            many=True, 
+            context=self.context
+        ).data
