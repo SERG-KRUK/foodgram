@@ -76,14 +76,14 @@ class UserViewSet(DjoserUserViewSet):
         serializer_class=SubscriptionSerializer
     )
     def subscribe(self, request, pk=None):
-        author = get_object_or_404(User, pk=pk)
-        serializer = self.get_serializer(
-            data={'author': author.id},
-            context={'request': request}
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save(user=request.user)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        if request.method == 'POST':
+            serializer = SubscriptionSerializer(
+                data={'author': pk},
+                context={'request': request}
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @subscribe.mapping.delete
     def unsubscribe(self, request, pk=None):
