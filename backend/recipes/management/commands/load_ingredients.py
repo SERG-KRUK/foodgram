@@ -45,7 +45,6 @@ class Command(BaseCommand):
                             measurement_unit=measurement_unit.strip()
                         )
                     )
-                
                 Ingredient.objects.bulk_create(
                     ingredients,
                     ignore_conflicts=True
@@ -70,7 +69,6 @@ class Command(BaseCommand):
                     )
                     for item in ingredients_data
                 ]
-                
                 Ingredient.objects.bulk_create(
                     ingredients,
                     ignore_conflicts=True

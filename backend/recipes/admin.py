@@ -22,7 +22,7 @@ from .models import (
 class UserAdmin(BaseUserAdmin):
     """Административная панель для модели пользователя."""
 
-    list_display = ('email', 'username', 'first_name', 'last_name', 
+    list_display = ('email', 'username', 'first_name', 'last_name',
                     'is_staff', 'recipes_count', 'subscribers_count')
     list_filter = ('is_staff', 'is_superuser', 'is_active')
     search_fields = ('email', 'username', 'first_name', 'last_name')
@@ -30,15 +30,18 @@ class UserAdmin(BaseUserAdmin):
 
     @display(description='Рецептов')
     def recipes_count(self, obj):
+        """Фунцкия количества рецептов."""
         return obj.recipes.count()
 
     @display(description='Подписчиков')
     def subscribers_count(self, obj):
+        """Фунцкия количества подписчиков."""
         return obj.following.count()
 
 
 class RecipeIngredientInline(admin.TabularInline):
     """Инлайн для отображения связи рецептов и ингредиентов."""
+
     model = RecipeIngredient
     extra = 1
     min_num = 1
@@ -57,6 +60,7 @@ class RecipeAdmin(admin.ModelAdmin):
 
     @display(description='Изображение')
     def image_preview(self, obj):
+        """Фунцкия для вывода изображения."""
         if obj.image:
             return mark_safe(
                 f'<img src="{obj.image.url}" width="80" height="60">')
@@ -64,16 +68,19 @@ class RecipeAdmin(admin.ModelAdmin):
 
     @display(description='Ингредиенты')
     def ingredients_list(self, obj):
+        """Фунцкия списка ингридиентов."""
         return ", ".join(
             [ingredient.name for ingredient in obj.ingredients.all()])
 
     @display(description='Теги')
     def tags_list(self, obj):
+        """Фунцкия списка тегов."""
         return ", ".join([tag.name for tag in obj.tags.all()])
 
     @display(description='В избранном')
     def favorites_count(self, obj):
-        return obj.favorite_set.count() 
+        """Фунцкия вывода избранного."""
+        return obj.favorite_set.count()
 
 
 @admin.register(Ingredient)

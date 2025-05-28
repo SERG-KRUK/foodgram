@@ -69,6 +69,7 @@ class User(AbstractUser):
 
     class Meta:
         """Мета-класс для модели User."""
+
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
         ordering = ['last_name', 'first_name']
@@ -260,7 +261,7 @@ class BaseUserRecipeRelation(models.Model):
         ]
 
     def __str__(self):
-        """Возвращает строковое представление пользователя и рецепта"""
+        """Возвращает строковое представление пользователя и рецепта."""
         return f"{self._meta.verbose_name}: {self.user} -> {self.recipe}"
 
 
@@ -319,10 +320,9 @@ class Subscription(models.Model):
             raise ValidationError('Нельзя подписаться на самого себя')
 
     def save(self, *args, **kwargs):
-        """Функция с сохранением подписки.""" 
-        self.full_clean() 
-        super().save(*args, **kwargs) 
-
+        """Функция с сохранением подписки."""
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         """Возвращает строковое представление подписки."""
