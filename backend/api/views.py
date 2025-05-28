@@ -81,7 +81,7 @@ class UserViewSet(DjoserUserViewSet):
     )
     def subscribe(self, request, pk=None):
         """Подписка на автора."""
-        author = get_object_or_404(User, id=pk)
+        author = get_object_or_404(User, pk=pk)
         serializer = self.get_serializer(data={'author': author.id})
         serializer.is_valid(raise_exception=True)
         serializer.save(user=request.user)

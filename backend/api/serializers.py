@@ -244,7 +244,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         return data
 
     def to_representation(self, instance):
-        """Representation after creating subscription."""
+        """Репрезентация после подписки."""
         return SubscriptionListSerializer(
             instance.author, context=self.context
         ).data
