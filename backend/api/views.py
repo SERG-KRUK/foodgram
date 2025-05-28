@@ -4,7 +4,7 @@ import logging
 from django.db.models import Sum, Count
 from django.http import HttpResponse
 from djoser.views import UserViewSet as DjoserUserViewSet
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, reverse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 
 class UserViewSet(DjoserUserViewSet):
     """ViewSet для работы с пользователями и подписками."""
-    
+
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
@@ -64,7 +64,7 @@ class UserViewSet(DjoserUserViewSet):
         ).annotate(
             recipes_count=Count('recipes')
         ).prefetch_related('recipes')
-        
+
         page = self.paginate_queryset(authors)
         serializer = SubscriptionListSerializer(
             page,
@@ -135,7 +135,7 @@ class UserViewSet(DjoserUserViewSet):
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     """ViewSet для работы с тегами (только чтение)."""
-    
+
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     pagination_class = None
@@ -144,7 +144,7 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     """ViewSet для работы с ингредиентами (только чтение)."""
-    
+
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
@@ -155,7 +155,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     """ViewSet для работы с рецептами."""
-    
+
     queryset = Recipe.objects.prefetch_related(
         'tags', 'ingredients').select_related('author')
     filter_backends = (DjangoFilterBackend,)
@@ -212,7 +212,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if deleted[0]:
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(
-            {'errors': 'Рецепт не найден'}, 
+            {'errors': 'Рецепт не найден'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
@@ -252,13 +252,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if not recipe.short_link:
             recipe.short_link = generate_hash()
             recipe.save()
+        short_link_url = reverse('recipe-detail', kwargs={'pk': recipe.pk})
         return Response({
-            'short-link': request.build_absolute_uri(
-                f'/s/{recipe.short_link}/')
+            'short-link': request.build_absolute_uri(short_link_url)
         })
-
-
-def recipe_by_short_link(request, short_link):
-    """Перенаправление по короткой ссылке на полный URL рецепта."""
-    recipe = get_object_or_404(Recipe, short_link=short_link)
-    return redirect(f'/recipes/{recipe.pk}/')

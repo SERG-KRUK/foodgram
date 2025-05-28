@@ -5,7 +5,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-from api.views import recipe_by_short_link
+from recipes.views import recipe_by_short_link
 
 urlpatterns = [
     path('admin/', admin.site.urls),
