@@ -79,48 +79,23 @@ class UserViewSet(DjoserUserViewSet):
         permission_classes=[IsAuthenticated],
         serializer_class=SubscriptionSerializer,
     )
-    def subscribe(self, request, *args, **kwargs):
+    def subscribe(self, request, pk=None):
         """Подписка на автора."""
-        try:
-            author = get_object_or_404(User, pk=kwargs.get('pk'))
-            serializer = self.get_serializer(
-                data={'author': author.id},
-                context={'request': request},
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save(user=request.user)
-            logger.info(f"User {request.user.id} subscribed to author "
-                        f"{author.id}")
-            return Response(serializer.data,
-                            status=status.HTTP_201_CREATED)
-        except Exception as e:
-            logger.error(f"Error subscribing user {request.user.id} to "
-                         f"author {kwargs.get('pk')}: {e}")
-            return Response({"error": str(e)},
-                            status=status.HTTP_400_BAD_REQUEST)
-    
-    
+        author = get_object_or_404(User, id=pk)
+        serializer = self.get_serializer(data={'author': author.id})
+        serializer.is_valid(raise_exception=True)
+        serializer.save(user=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
     @subscribe.mapping.delete
-    def unsubscribe(self, request, *args, **kwargs):
+    def unsubscribe(self, request, pk=None):
         """Отписка от автора."""
-        try:
-            deleted, _ = Subscription.objects.filter(
-                user=request.user,
-                author_id=kwargs.get('pk'),
-            ).delete()
-            if deleted:
-                logger.info(f"User {request.user.id} unsubscribed from "
-                            f"author {kwargs.get('pk')}")
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            else:
-                logger.warning(f"User {request.user.id} was not subscribed "
-                               f"to author {kwargs.get('pk')}")
-                return Response(status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            logger.error(f"Error unsubscribing user {request.user.id} from "
-                         f"author {kwargs.get('pk')}: {e}")
-            return Response({"error": str(e)},
-                            status=status.HTTP_400_BAD_REQUEST)
+        deleted, _ = Subscription.objects.filter(
+            user=request.user, author_id=pk
+        ).delete()
+        if deleted:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(
         methods=['put'],

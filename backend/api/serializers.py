@@ -228,34 +228,31 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         """Мета класс для подписок."""
         model = Subscription
         fields = ('author',)
-        extra_kwargs = {
-            'user': {'read_only': True},
-        }
 
     def validate(self, data):
-        """Функция валидации подписок."""
-        request = self.context.get('request')
-        if not request:
-            raise serializers.ValidationError("Требуется запрос")
-            
-        if request.user == data['author']:
-            raise serializers.ValidationError("Нельзя подписаться на себя")
-            
+        """Валидация подписок."""
+        user = self.context['request'].user
+        if user == data['author']:
+            raise serializers.ValidationError(
+                'You cannot subscribe to yourself.'
+            )
         if Subscription.objects.filter(
-            user=request.user, 
-            author=data['author']
-        ).exists():
-            raise serializers.ValidationError("Подписка уже существует")
-            
+                user=user, author=data['author']).exists():
+            raise serializers.ValidationError(
+                'You are already subscribed to this author.'
+            )
         return data
 
-
     def to_representation(self, instance):
-        """Функция для подписок."""
+        """Representation after creating subscription."""
         return SubscriptionListSerializer(
-            instance.author,
-            context=self.context
+            instance.author, context=self.context
         ).data
+
+    def save(self, **kwargs):
+        """Сохранение подписки."""
+        self.validated_data['user'] = self.context['request'].user
+        super().save(**kwargs)
 
 class SubscriptionListSerializer(UserSerializer):
     """Сериализатор для вывода подписок."""
