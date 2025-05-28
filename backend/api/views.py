@@ -1,5 +1,6 @@
 """View-классы для обработки запросов API приложения recipes."""
 
+import logging
 from django.db.models import Sum, Count
 from django.http import HttpResponse
 from djoser.views import UserViewSet as DjoserUserViewSet
@@ -39,6 +40,9 @@ from .serializers import (
 from .filters import IngredientFilter, RecipeFilterSet
 
 
+logger = logging.getLogger(__name__)
+
+
 class UserViewSet(DjoserUserViewSet):
     """ViewSet для работы с пользователями и подписками."""
     
@@ -73,30 +77,50 @@ class UserViewSet(DjoserUserViewSet):
         detail=True,
         methods=['post'],
         permission_classes=[IsAuthenticated],
-        serializer_class=SubscriptionSerializer
+        serializer_class=SubscriptionSerializer,
     )
     def subscribe(self, request, *args, **kwargs):
         """Подписка на автора."""
-        author = get_object_or_404(User, pk=kwargs.get('pk'))
-        serializer = self.get_serializer(
-            data={'author': author.id},
-            context={'request': request}
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save(user=request.user)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
+        try:
+            author = get_object_or_404(User, pk=kwargs.get('pk'))
+            serializer = self.get_serializer(
+                data={'author': author.id},
+                context={'request': request},
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save(user=request.user)
+            logger.info(f"User {request.user.id} subscribed to author "
+                        f"{author.id}")
+            return Response(serializer.data,
+                            status=status.HTTP_201_CREATED)
+        except Exception as e:
+            logger.error(f"Error subscribing user {request.user.id} to "
+                         f"author {kwargs.get('pk')}: {e}")
+            return Response({"error": str(e)},
+                            status=status.HTTP_400_BAD_REQUEST)
+    
+    
     @subscribe.mapping.delete
     def unsubscribe(self, request, *args, **kwargs):
         """Отписка от автора."""
-        deleted, _ = Subscription.objects.filter(
-            user=request.user,
-            author_id=kwargs.get('pk')
-        ).delete()
-        return Response(
-            status=status.HTTP_204_NO_CONTENT if deleted 
-            else status.HTTP_400_BAD_REQUEST
-        )
+        try:
+            deleted, _ = Subscription.objects.filter(
+                user=request.user,
+                author_id=kwargs.get('pk'),
+            ).delete()
+            if deleted:
+                logger.info(f"User {request.user.id} unsubscribed from "
+                            f"author {kwargs.get('pk')}")
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            else:
+                logger.warning(f"User {request.user.id} was not subscribed "
+                               f"to author {kwargs.get('pk')}")
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"Error unsubscribing user {request.user.id} from "
+                         f"author {kwargs.get('pk')}: {e}")
+            return Response({"error": str(e)},
+                            status=status.HTTP_400_BAD_REQUEST)
 
     @action(
         methods=['put'],

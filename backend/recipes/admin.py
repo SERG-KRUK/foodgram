@@ -34,7 +34,7 @@ class UserAdmin(BaseUserAdmin):
 
     @display(description='Подписчиков')
     def subscribers_count(self, obj):
-        return obj.subscribers.count()
+        return obj.following.count()
 
 
 class RecipeIngredientInline(admin.TabularInline):
@@ -73,7 +73,7 @@ class RecipeAdmin(admin.ModelAdmin):
 
     @display(description='В избранном')
     def favorites_count(self, obj):
-        return obj.favorites.count()
+        return obj.favorite_set.count() 
 
 
 @admin.register(Ingredient)
