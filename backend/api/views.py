@@ -82,9 +82,11 @@ class UserViewSet(DjoserUserViewSet):
     def subscribe(self, request, pk=None):
         """Подписка на автора."""
         author = get_object_or_404(User, pk=pk)
-        serializer = self.get_serializer(data={'author': author.id})
+        serializer = SubscriptionSerializer(
+            data={'author': author.id}, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        serializer.save(user=request.user)
+        serializer.save()
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @subscribe.mapping.delete
