@@ -48,6 +48,15 @@ class UserViewSet(DjoserUserViewSet):
     
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    lookup_field = 'id'
+
+
+    def get_object(self):
+        """Переопределяем get_object."""
+        queryset = self.filter_queryset(self.get_queryset())
+        pk = self.kwargs.get('pk')
+        obj = get_object_or_404(queryset, pk=pk)
+        return obj
 
     @action(detail=False, methods=['get'])
     def me(self, request):
