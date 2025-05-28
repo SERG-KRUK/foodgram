@@ -75,8 +75,9 @@ class UserViewSet(DjoserUserViewSet):
         permission_classes=[IsAuthenticated],
         serializer_class=SubscriptionSerializer
     )
-    def subscribe(self, request, pk=None):
-        author = get_object_or_404(User, pk=pk)
+    def subscribe(self, request, *args, **kwargs):
+        """Подписка на автора."""
+        author = get_object_or_404(User, pk=kwargs.get('pk'))
         serializer = self.get_serializer(
             data={'author': author.id},
             context={'request': request}
@@ -84,12 +85,13 @@ class UserViewSet(DjoserUserViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save(user=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
+
     @subscribe.mapping.delete
-    def unsubscribe(self, request, pk=None):
+    def unsubscribe(self, request, *args, **kwargs):
+        """Отписка от автора."""
         deleted, _ = Subscription.objects.filter(
             user=request.user,
-            author_id=pk
+            author_id=kwargs.get('pk')
         ).delete()
         return Response(
             status=status.HTTP_204_NO_CONTENT if deleted 
