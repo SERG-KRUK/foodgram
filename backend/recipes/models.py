@@ -1,12 +1,22 @@
 """Модели пользователи, ингредиенты, рецепты и связанные сущности."""
 
-import string
-from random import choice, randint
-
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 from django.core.exceptions import ValidationError
+
+from .services import generate_hash
+from api.constants import (
+    TAG,
+    INGREDIENT,
+    MEASUREMENT_UNIT,
+    RECIPE_NAME,
+    EMAIL,
+    USERNAME,
+    FIRST_NAME,
+    LAST_NAME,
+    SHORT_URL_CODE,
+)
 
 
 class User(AbstractUser):
@@ -16,21 +26,21 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ('username', 'first_name', 'last_name')
 
     email = models.EmailField(
-        max_length=254,
+        max_length=EMAIL,
         unique=True,
         verbose_name='Email',
         help_text='Обязательное поле. Максимум 254 символа.',
         error_messages={
-            'unique': "Пользователь с таким email уже существует.",
+            'unique': 'Пользователь с таким email уже существует.',
         }
     )
     username = models.CharField(
-        max_length=150,
+        max_length=USERNAME,
         unique=True,
         verbose_name='Username',
         help_text='Обязательное поле. Максимум 150 символов. Только буквы',
         error_messages={
-            'unique': "Пользователь с таким username уже существует.",
+            'unique': 'Пользователь с таким username уже существует.',
         },
         validators=[RegexValidator(
             regex=r'^[\w.@+-]+\Z',
@@ -38,12 +48,12 @@ class User(AbstractUser):
         )]
     )
     first_name = models.CharField(
-        max_length=150,
+        max_length=FIRST_NAME,
         verbose_name='Имя',
         help_text='Обязательное поле. Максимум 150 символов.'
     )
     last_name = models.CharField(
-        max_length=150,
+        max_length=LAST_NAME,
         verbose_name='Фамилия',
         help_text='Обязательное поле. Максимум 150 символов.'
     )
@@ -72,12 +82,12 @@ class Tag(models.Model):
     """Модель тега для рецептов."""
 
     name = models.CharField(
-        max_length=32,
+        max_length=TAG,
         unique=True,
         verbose_name='Название'
     )
     slug = models.SlugField(
-        max_length=32,
+        max_length=TAG,
         unique=True,
         allow_unicode=True,
         verbose_name='Слаг'
@@ -99,11 +109,11 @@ class Ingredient(models.Model):
     """Модель ингредиента для рецептов."""
 
     name = models.CharField(
-        max_length=128,
+        max_length=INGREDIENT,
         verbose_name='Название'
     )
     measurement_unit = models.CharField(
-        max_length=64,
+        max_length=MEASUREMENT_UNIT,
         verbose_name='Единица измерения'
     )
 
@@ -135,7 +145,7 @@ class Recipe(models.Model):
         verbose_name='Автор'
     )
     name = models.CharField(
-        max_length=256,
+        max_length=RECIPE_NAME,
         verbose_name='Название'
     )
     image = models.ImageField(
@@ -161,7 +171,7 @@ class Recipe(models.Model):
         verbose_name='Дата публикации'
     )
     short_link = models.SlugField(
-        max_length=32,
+        max_length=SHORT_URL_CODE,
         unique=True,
         blank=True,
         verbose_name='Короткая ссылка'
@@ -306,7 +316,7 @@ class Subscription(models.Model):
     def clean(self):
         """Функция с валидацией подписки."""
         if self.user == self.author:
-            raise ValidationError("Нельзя подписаться на самого себя")
+            raise ValidationError('Нельзя подписаться на самого себя')
 
     def save(self, *args, **kwargs):
         """Функция с сохранением подписки.""" 
@@ -317,13 +327,6 @@ class Subscription(models.Model):
     def __str__(self):
         """Возвращает строковое представление подписки."""
         return f"{self.user} подписан на {self.author}"
-
-
-def generate_hash() -> str:
-    """Генерирует случайную строку для коротких ссылок."""
-    return ''.join(
-        choice(string.ascii_letters + string.digits)
-        for _ in range(randint(15, 32)))
 
 
 class LinkMapped(models.Model):
