@@ -46,14 +46,14 @@ class UserViewSet(DjoserUserViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
-    @action(detail=False, methods=('get'))
+    @action(detail=False, methods=('get',))
     def me(self, request):
         """Получение данных текущего пользователя."""
         serializer = UserSerializer(request.user, context={'request': request})
         return Response(serializer.data)
 
     @action(
-        detail=False, methods=('get'), permission_classes=(IsAuthenticated))
+        detail=False, methods=('get',), permission_classes=(IsAuthenticated,))
     def subscriptions(self, request):
         """Список подписок с пагинацией."""
         authors = User.objects.filter(
@@ -72,8 +72,8 @@ class UserViewSet(DjoserUserViewSet):
 
     @action(
         detail=True,
-        methods=('post'),
-        permission_classes=(IsAuthenticated),
+        methods=('post',),
+        permission_classes=(IsAuthenticated,),
         serializer_class=SubscriptionSerializer,
     )
     def subscribe(self, request, id=None):
@@ -100,10 +100,10 @@ class UserViewSet(DjoserUserViewSet):
         )
 
     @action(
-        methods=('put'),
+        methods=('put',),
         detail=False,
         url_path='me/avatar',
-        permission_classes=(IsAuthenticated),
+        permission_classes=(IsAuthenticated,),
         serializer_class=UserSerializer
     )
     def avatar(self, request):
@@ -191,8 +191,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=True,
-        methods=('post'),
-        permission_classes=[IsAuthenticated],
+        methods=('post',),
+        permission_classes=(IsAuthenticated,),
         serializer_class=FavoriteSerializer
     )
     def favorite(self, request, pk=None):
@@ -210,8 +210,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=True,
-        methods=('post'),
-        permission_classes=[IsAuthenticated],
+        methods=('post',),
+        permission_classes=(IsAuthenticated,),
         serializer_class=ShoppingCartSerializer
     )
     def shopping_cart(self, request, pk=None):
