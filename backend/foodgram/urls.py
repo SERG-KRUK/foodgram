@@ -11,7 +11,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
     path(
-        's/<slug:short_link>/', recipe_by_short_link, name='recipe-short-link')
+        's/<slug:short_link>/', recipe_by_short_link, name='recipe-short-link'
+    )
 ]
 
 if settings.DEBUG:

@@ -12,7 +12,10 @@ from recipes.models import (
     RecipeIngredient,
     Subscription,
     Tag,
+    ShoppingCart,
+    Favorite,
 )
+from .constants import MIN_VALUE, RECIPE_COUNT
 
 
 User = get_user_model()
@@ -78,7 +81,7 @@ class RecipeIngredientWriteSerializer(serializers.ModelSerializer):
     """Сериализатор для записи ингридиентов."""
 
     id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
-    amount = serializers.IntegerField(min_value=1)
+    amount = serializers.IntegerField(min_value=MIN_VALUE)
 
     class Meta:
         """Мета класс для рецептов."""
@@ -121,6 +124,43 @@ class RecipeSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         return (request and request.user.is_authenticated
                 and obj.shoppingcart_set.filter(user=request.user).exists())
+    
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    """Сериализатор для избранного."""
+
+    class Meta:
+        """Мета для избранного."""
+
+        model = Favorite
+        fields = ('user', 'recipe')
+    
+    def validate(self, data):
+        """Валидация для избранного."""
+        if Favorite.objects.filter(
+            user=data['user'],
+            recipe=data['recipe']
+        ).exists():
+            raise serializers.ValidationError('Рецепт уже в избранном')
+        return data
+
+class ShoppingCartSerializer(serializers.ModelSerializer):
+    """Сериализатор для корзины покупок."""
+
+    class Meta:
+        """Мета для корзины покупок."""
+
+        model = ShoppingCart
+        fields = ('user', 'recipe')
+    
+    def validate(self, data):
+        """Валидация для корзины покупок."""
+        if ShoppingCart.objects.filter(
+            user=data['user'],
+            recipe=data['recipe']
+        ).exists():
+            raise serializers.ValidationError('Рецепт уже в корзине')
+        return data
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
@@ -132,7 +172,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     )
     ingredients = RecipeIngredientWriteSerializer(many=True, required=False)
     image = Base64ImageField()
-    cooking_time = serializers.IntegerField(min_value=1)
+    cooking_time = serializers.IntegerField(min_value=MIN_VALUE)
 
     class Meta:
         """Мета класс для создания рецептов."""
@@ -166,8 +206,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags', None)
         ingredients_data = validated_data.pop('ingredients', None)
 
-        instance = super().update(instance, validated_data)
-
         if tags is not None:
             instance.tags.set(tags)
 
@@ -175,7 +213,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             instance.recipe_ingredients.all().delete()
             self._create_ingredients(instance, ingredients_data)
 
-        return instance
+        return super().update(instance, validated_data)
 
     @staticmethod
     def _create_ingredients(recipe, ingredients_data):
@@ -201,15 +239,24 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     def validate_ingredients(self, value):
         """Валидация ингредиентов."""
-        try:
-            if int(value) <= 0:
-                raise serializers.ValidationError(
-                    "Количество должно быть целым числом больше 0"
-                )
-        except (ValueError, TypeError):
+        if not value or len(value) == 0:
             raise serializers.ValidationError(
-                "Количество должно быть целым числом"
+                'Должен быть выбран хотя бы один ингредиент'
             )
+        ingredient_ids = [ingredient['id'] for ingredient in value]
+        if len(ingredient_ids) != len(set(ingredient_ids)):
+            raise serializers.ValidationError(
+                'Ингредиенты должны быть уникальными'
+            )
+        for ingredient in value:
+            if not isinstance(ingredient.get('amount'), int):
+                raise serializers.ValidationError(
+                    'Количество каждого ингредиента должно быть целым числом'
+                )
+            if ingredient['amount'] <= 0:
+                raise serializers.ValidationError(
+                    'Количество каждого ингредиента должно быть больше 0'
+                )
         return value
 
     def to_representation(self, instance):
@@ -230,25 +277,23 @@ class ShortRecipeSerializer(serializers.ModelSerializer):
 class SubscriptionSerializer(serializers.ModelSerializer):
     """Сериализатор для создания подписок."""
 
-    author = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
-
     class Meta:
         """Мета класс для подписок."""
 
         model = Subscription
-        fields = ('author',)
+        fields = ('author', 'user')
 
     def validate(self, data):
         """Валидация подписок."""
         user = self.context['request'].user
         if user == data['author']:
             raise serializers.ValidationError(
-                'You cannot subscribe to yourself.'
+                'Нельзя подписаться на себя.'
             )
         if Subscription.objects.filter(
                 user=user, author=data['author']).exists():
             raise serializers.ValidationError(
-                'You are already subscribed to this author.'
+                'Вы уже подписаны на автора.'
             )
         return data
 
@@ -258,17 +303,14 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             instance.author, context=self.context
         ).data
 
-    def save(self, **kwargs):
-        """Сохранение подписки."""
-        self.validated_data['user'] = self.context['request'].user
-        super().save(**kwargs)
-
 
 class SubscriptionListSerializer(UserSerializer):
     """Сериализатор для вывода подписок."""
 
     recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.IntegerField(read_only=True)
+    recipes_count = serializers.IntegerField(
+        read_only=True, default=RECIPE_COUNT
+    )
 
     class Meta(UserSerializer.Meta):
         """Мета класс для подписок."""

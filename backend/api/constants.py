@@ -4,11 +4,6 @@
 USERNAME_REGEX = r'^[\w.@+-]+\Z'
 SLUG_REGEX = r'^[-a-zA-Z0-9_]+$'
 
-# Валидация числовых значений
-MIN_YEAR_VALUE = -3000  # Для поддержки древних произведений
-MIN_SCORE_VALUE = 1
-MAX_SCORE_VALUE = 10
-
 # Длины строковых представлений
 TAG = 32
 INGREDIENT = 128
@@ -19,3 +14,9 @@ USERNAME = 150
 FIRST_NAME = 150
 LAST_NAME = 150
 SHORT_URL_CODE = 6
+STRING_STR = 20
+HASH = 32
+URL_ORIG = 32
+STRING_TAG = 20
+MIN_VALUE = 1
+RECIPE_COUNT = 0

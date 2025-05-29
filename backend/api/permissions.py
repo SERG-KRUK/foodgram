@@ -7,7 +7,8 @@ class IsAuthorOrReadOnly(BasePermission):
     """Разрешает изменение рецепта только его автору."""
 
     def has_object_permission(self, request, view, obj):
-        """Проверяет, является ли пользователь автором рецепта."""
-        if request.method in SAFE_METHODS:
-            return True
-        return obj.author == request.user
+        """Разрешение для автора или только чтение."""
+        return (
+            request.method in SAFE_METHODS
+            or obj.author == request.user
+        )

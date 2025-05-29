@@ -16,6 +16,11 @@ from api.constants import (
     FIRST_NAME,
     LAST_NAME,
     SHORT_URL_CODE,
+    STRING_STR,
+    HASH,
+    URL_ORIG,
+    STRING_TAG,
+    MIN_VALUE
 )
 
 
@@ -42,10 +47,10 @@ class User(AbstractUser):
         error_messages={
             'unique': 'Пользователь с таким username уже существует.',
         },
-        validators=[RegexValidator(
+        validators=(RegexValidator(
             regex=r'^[\w.@+-]+\Z',
             message='Недопустимые символы в имени пользователя'
-        )]
+        ))
     )
     first_name = models.CharField(
         max_length=FIRST_NAME,
@@ -72,7 +77,7 @@ class User(AbstractUser):
 
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
-        ordering = ['last_name', 'first_name']
+        ordering = ('last_name', 'first_name')
 
     def __str__(self):
         """Строковое представление пользователя."""
@@ -99,11 +104,11 @@ class Tag(models.Model):
 
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
-        ordering = ['name']
+        ordering = ('name')
 
     def __str__(self):
         """Возвращает строковое представление тега."""
-        return self.name[:20]
+        return self.name[:STRING_TAG]
 
 
 class Ingredient(models.Model):
@@ -123,17 +128,17 @@ class Ingredient(models.Model):
 
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
-        ordering = ['name']
-        constraints = [
+        ordering = ('name')
+        constraints = (
             models.UniqueConstraint(
-                fields=['name', 'measurement_unit'],
+                fields=('name', 'measurement_unit'),
                 name='unique_ingredient'
             )
-        ]
+        )
 
     def __str__(self):
         """Возвращает строковое представление ингредиента."""
-        return f"{self.name[:20]} ({self.measurement_unit})"
+        return f'{self.name[:STRING_STR]} ({self.measurement_unit})'
 
 
 class Recipe(models.Model):
@@ -156,7 +161,7 @@ class Recipe(models.Model):
     text = models.TextField(verbose_name='Описание')
     cooking_time = models.PositiveIntegerField(
         verbose_name='Время приготовления',
-        validators=[MinValueValidator(1)]
+        validators=(MinValueValidator(MIN_VALUE))
     )
     tags = models.ManyToManyField(
         Tag,
@@ -183,7 +188,7 @@ class Recipe(models.Model):
 
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
-        ordering = ['-pub_date']
+        ordering = ('-pub_date')
 
     def save(self, *args, **kwargs):
         """Сохраняет рецепт, генерируя короткую ссылку при необходимости."""
@@ -193,7 +198,7 @@ class Recipe(models.Model):
 
     def __str__(self):
         """Возвращает строковое представление рецепта."""
-        return self.name[:20]
+        return self.name[:STRING_STR]
 
 
 class RecipeIngredient(models.Model):
@@ -213,7 +218,7 @@ class RecipeIngredient(models.Model):
     )
     amount = models.PositiveIntegerField(
         verbose_name='Количество',
-        validators=[MinValueValidator(1)]
+        validators=(MinValueValidator(MIN_VALUE))
     )
 
     class Meta:
@@ -221,13 +226,13 @@ class RecipeIngredient(models.Model):
 
         verbose_name = 'Ингредиент в рецепте'
         verbose_name_plural = 'Ингредиенты в рецептах'
-        ordering = ['ingredient__name']
-        constraints = [
+        ordering = ('ingredient__name')
+        constraints = (
             models.UniqueConstraint(
-                fields=['recipe', 'ingredient'],
+                fields=('recipe', 'ingredient'),
                 name='unique_recipe_ingredient'
             )
-        ]
+        )
 
     def __str__(self):
         """Возвращает строковое представление связи рецепта и ингредиента."""
@@ -253,12 +258,12 @@ class BaseUserRecipeRelation(models.Model):
         """Мета-класс для связи пользователя и рецепта."""
 
         abstract = True
-        constraints = [
+        constraints = (
             models.UniqueConstraint(
-                fields=['user', 'recipe'],
+                fields=('user', 'recipe'),
                 name='%(app_label)s_%(class)s_unique'
             )
-        ]
+        )
 
     def __str__(self):
         """Возвращает строковое представление пользователя и рецепта."""
@@ -292,13 +297,13 @@ class Subscription(models.Model):
         User,
         on_delete=models.CASCADE,
         related_name='follower',
-        verbose_name='Подписчик'
+        verbose_name='подписки пользователя'
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='following',
-        verbose_name='Автор'
+        verbose_name='подписки на автора'
     )
 
     class Meta:
@@ -306,13 +311,13 @@ class Subscription(models.Model):
 
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
-        ordering = ['author__last_name', 'author__first_name']
-        constraints = [
+        ordering = ('author__last_name', 'author__first_name')
+        constraints = (
             models.UniqueConstraint(
-                fields=['user', 'author'],
+                fields=('user', 'author'),
                 name='unique_subscription'
             )
-        ]
+        )
 
     def clean(self):
         """Функция с валидацией подписки."""
@@ -326,14 +331,20 @@ class Subscription(models.Model):
 
     def __str__(self):
         """Возвращает строковое представление подписки."""
-        return f"{self.user} подписан на {self.author}"
+        return f'{self.user} подписан на {self.author}'
 
 
 class LinkMapped(models.Model):
     """Модель для хранения сокращенных ссылок."""
 
-    url_hash = models.CharField(max_length=32, unique=True)
-    original_url = models.CharField(max_length=32)
+    url_hash = models.CharField(max_length=HASH, unique=True)
+    original_url = models.CharField(max_length=URL_ORIG)
+
+    class Meta:
+        """Мета-класс для модели LinkMapped."""
+
+        verbose_name = 'Сокращенная ссылка'
+        verbose_name_plural = 'Сокращенные ссылки'
 
     def save(self, *args, **kwargs):
         """Сохраняет ссылку, генерируя хеш при необходимости."""
@@ -343,10 +354,4 @@ class LinkMapped(models.Model):
 
     def __str__(self):
         """Возвращает строковое представление сокращенной ссылки."""
-        return f"{self.url_hash} -> {self.original_url}"
-
-    class Meta:
-        """Мета-класс для модели LinkMapped."""
-
-        verbose_name = 'Сокращенная ссылка'
-        verbose_name_plural = 'Сокращенные ссылки'
+        return f'{self.url_hash} -> {self.original_url}'
