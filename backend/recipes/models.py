@@ -323,12 +323,12 @@ class Subscription(models.Model):
         )
 
     def clean(self):
-        """Функция с валидацией подписки."""
+        """Метод с валидацией подписки."""
         if self.user == self.author:
             raise ValidationError('Нельзя подписаться на самого себя')
 
     def save(self, *args, **kwargs):
-        """Функция с сохранением подписки."""
+        """Метод с сохранением подписки."""
         self.full_clean()
         super().save(*args, **kwargs)
 

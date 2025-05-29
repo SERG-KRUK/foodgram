@@ -35,7 +35,7 @@ class UserSerializer(BaseUserSerializer):
         )
 
     def get_is_subscribed(self, obj):
-        """Функция для подписок."""
+        """Метод для подписок."""
         request = self.context.get('request')
         return (request and request.user.is_authenticated
                 and obj.following.filter(user=request.user).exists())
@@ -114,17 +114,17 @@ class RecipeSerializer(serializers.ModelSerializer):
         )
 
     def get_is_favorited(self, obj):
-        """Функция для избранного."""
+        """Метод для избранного."""
         request = self.context.get('request')
         return (request and request.user.is_authenticated
                 and obj.favorite_set.filter(user=request.user).exists())
 
     def get_is_in_shopping_cart(self, obj):
-        """Функция для корзины покупок."""
+        """Метод для корзины покупок."""
         request = self.context.get('request')
         return (request and request.user.is_authenticated
                 and obj.shoppingcart_set.filter(user=request.user).exists())
-    
+
 
 class FavoriteSerializer(serializers.ModelSerializer):
     """Сериализатор для избранного."""
@@ -134,7 +134,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
         model = Favorite
         fields = ('user', 'recipe')
-    
+
     def validate(self, data):
         """Валидация для избранного."""
         if Favorite.objects.filter(
@@ -144,6 +144,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Рецепт уже в избранном')
         return data
 
+
 class ShoppingCartSerializer(serializers.ModelSerializer):
     """Сериализатор для корзины покупок."""
 
@@ -152,7 +153,7 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
 
         model = ShoppingCart
         fields = ('user', 'recipe')
-    
+
     def validate(self, data):
         """Валидация для корзины покупок."""
         if ShoppingCart.objects.filter(
@@ -186,7 +187,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        """Функция создания рецепта."""
+        """Метод создания рецепта."""
         tags = validated_data.pop('tags')
         ingredients_data = validated_data.pop('ingredients')
 
@@ -202,7 +203,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        """Функция редактирования рецепта."""
+        """Метод редактирования рецепта."""
         tags = validated_data.pop('tags', None)
         ingredients_data = validated_data.pop('ingredients', None)
 
@@ -217,7 +218,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def _create_ingredients(recipe, ingredients_data):
-        """Функция для ингридиентов рецепта."""
+        """Метод для ингридиентов рецепта."""
         RecipeIngredient.objects.bulk_create([
             RecipeIngredient(
                 recipe=recipe,
@@ -228,7 +229,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         ])
 
     def validate_tags(self, value):
-        """Функция валидации тегов рецепта."""
+        """Метод валидации тегов рецепта."""
         if not value:
             raise serializers.ValidationError('Необходим хотя бы один тег.')
 
@@ -251,7 +252,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return value
 
     def to_representation(self, instance):
-        """Функция для рецептов."""
+        """Метод для рецептов."""
         return RecipeSerializer(instance, context=self.context).data
 
 
@@ -275,6 +276,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         fields = ('user', 'author')
 
     def validate(self, data):
+        """Валидация подписки."""
         if data['user'] == data['author']:
             raise serializers.ValidationError(
                 'Нельзя подписаться на самого себя'
@@ -284,7 +286,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Вы уже подписаны на этого автора'
             )
-        
+
         return data
 
     def to_representation(self, instance):
@@ -308,7 +310,7 @@ class SubscriptionListSerializer(UserSerializer):
         fields = UserSerializer.Meta.fields + ('recipes', 'recipes_count')
 
     def get_recipes(self, obj):
-        """Функция вывода подписок."""
+        """Метод вывода подписок."""
         request = self.context.get('request')
         limit = request.query_params.get('recipes_limit') if request else None
         recipes = obj.recipes.all()

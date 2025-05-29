@@ -30,12 +30,12 @@ class UserAdmin(BaseUserAdmin):
 
     @display(description='Рецептов')
     def recipes_count(self, obj):
-        """Функция количества рецептов."""
+        """Метод количества рецептов."""
         return obj.recipes.count()
 
     @display(description='Подписчиков')
     def subscribers_count(self, obj):
-        """Функция количества подписчиков."""
+        """Метод количества подписчиков."""
         return obj.following.count()
 
 
@@ -60,23 +60,23 @@ class RecipeAdmin(admin.ModelAdmin):
 
     @display(description='Изображение')
     def image_preview(self, obj):
-        """Функция для вывода изображения."""
+        """Метод для вывода изображения."""
         return mark_safe(f'<img src="{obj.image.url}" width="80" height="60">')
 
     @display(description='Ингредиенты')
     def ingredients_list(self, obj):
-        """Функция списка ингридиентов."""
+        """Метод списка ингридиентов."""
         return ', '.join(
             [ingredient.name for ingredient in obj.ingredients.all()])
 
     @display(description='Теги')
     def tags_list(self, obj):
-        """Функция списка тегов."""
+        """Метод списка тегов."""
         return ', '.join([tag.name for tag in obj.tags.all()])
 
     @display(description='В избранном')
     def favorites_count(self, obj):
-        """Функция вывода избранного."""
+        """Метод вывода избранного."""
         return obj.favorite_set.count()
 
 
