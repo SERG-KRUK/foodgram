@@ -191,7 +191,7 @@ class Recipe(models.Model):
 
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
-        ordering = ('-pub_date')
+        ordering = ('-pub_date',)
 
     def save(self, *args, **kwargs):
         """Сохраняет рецепт, генерируя короткую ссылку при необходимости."""
