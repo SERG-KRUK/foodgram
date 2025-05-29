@@ -136,7 +136,7 @@ class Ingredient(models.Model):
             models.UniqueConstraint(
                 fields=('name', 'measurement_unit'),
                 name='unique_ingredient'
-            )
+            ),
         )
 
     def __str__(self):
