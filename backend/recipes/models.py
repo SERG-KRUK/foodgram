@@ -234,7 +234,7 @@ class RecipeIngredient(models.Model):
             models.UniqueConstraint(
                 fields=('recipe', 'ingredient'),
                 name='unique_recipe_ingredient'
-            )
+            ),
         )
 
     def __str__(self):
@@ -265,7 +265,7 @@ class BaseUserRecipeRelation(models.Model):
             models.UniqueConstraint(
                 fields=('user', 'recipe'),
                 name='%(app_label)s_%(class)s_unique'
-            )
+            ),
         )
 
     def __str__(self):
@@ -319,7 +319,7 @@ class Subscription(models.Model):
             models.UniqueConstraint(
                 fields=('user', 'author'),
                 name='unique_subscription'
-            )
+            ),
         )
 
     def clean(self):
