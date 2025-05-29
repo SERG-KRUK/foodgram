@@ -20,7 +20,8 @@ from api.constants import (
     HASH,
     URL_ORIG,
     STRING_TAG,
-    MIN_VALUE
+    MIN_VALUE,
+    USERNAME_REGEX
 )
 
 
@@ -47,10 +48,12 @@ class User(AbstractUser):
         error_messages={
             'unique': 'Пользователь с таким username уже существует.',
         },
-        validators=(RegexValidator(
-            regex=r'^[\w.@+-]+\Z',
-            message='Недопустимые символы в имени пользователя'
-        ))
+        validators=(
+            RegexValidator(
+                regex=USERNAME_REGEX,
+                message='Недопустимые символы в имени пользователя'
+            ),
+        )
     )
     first_name = models.CharField(
         max_length=FIRST_NAME,
@@ -104,7 +107,7 @@ class Tag(models.Model):
 
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
-        ordering = ('name')
+        ordering = ('name',)
 
     def __str__(self):
         """Возвращает строковое представление тега."""
@@ -128,7 +131,7 @@ class Ingredient(models.Model):
 
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
-        ordering = ('name')
+        ordering = ('name',)
         constraints = (
             models.UniqueConstraint(
                 fields=('name', 'measurement_unit'),
@@ -161,7 +164,7 @@ class Recipe(models.Model):
     text = models.TextField(verbose_name='Описание')
     cooking_time = models.PositiveIntegerField(
         verbose_name='Время приготовления',
-        validators=(MinValueValidator(MIN_VALUE))
+        validators=(MinValueValidator(MIN_VALUE),)
     )
     tags = models.ManyToManyField(
         Tag,
@@ -218,7 +221,7 @@ class RecipeIngredient(models.Model):
     )
     amount = models.PositiveIntegerField(
         verbose_name='Количество',
-        validators=(MinValueValidator(MIN_VALUE))
+        validators=(MinValueValidator(MIN_VALUE),)
     )
 
     class Meta:
@@ -226,7 +229,7 @@ class RecipeIngredient(models.Model):
 
         verbose_name = 'Ингредиент в рецепте'
         verbose_name_plural = 'Ингредиенты в рецептах'
-        ordering = ('ingredient__name')
+        ordering = ('ingredient__name',)
         constraints = (
             models.UniqueConstraint(
                 fields=('recipe', 'ingredient'),
