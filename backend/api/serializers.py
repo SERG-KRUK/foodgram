@@ -248,15 +248,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Ингредиенты должны быть уникальными'
             )
-        for ingredient in value:
-            if not isinstance(ingredient.get('amount'), int):
-                raise serializers.ValidationError(
-                    'Количество каждого ингредиента должно быть целым числом'
-                )
-            if ingredient['amount'] <= 0:
-                raise serializers.ValidationError(
-                    'Количество каждого ингредиента должно быть больше 0'
-                )
         return value
 
     def to_representation(self, instance):
@@ -281,20 +272,19 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         """Мета класс для подписок."""
 
         model = Subscription
-        fields = ('author', 'user')
+        fields = ('user', 'author')
 
     def validate(self, data):
-        """Валидация подписок."""
-        user = self.context['request'].user
-        if user == data['author']:
+        if data['user'] == data['author']:
             raise serializers.ValidationError(
-                'Нельзя подписаться на себя.'
+                'Нельзя подписаться на самого себя'
             )
         if Subscription.objects.filter(
-                user=user, author=data['author']).exists():
+                user=data['user'], author=data['author']).exists():
             raise serializers.ValidationError(
-                'Вы уже подписаны на автора.'
+                'Вы уже подписаны на этого автора'
             )
+        
         return data
 
     def to_representation(self, instance):
