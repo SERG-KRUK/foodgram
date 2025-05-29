@@ -25,7 +25,6 @@ from recipes.models import (
     User,
     generate_hash,
 )
-from recipes.views import recipe_by_short_link
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (
     RecipeCreateSerializer,
