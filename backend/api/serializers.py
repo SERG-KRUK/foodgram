@@ -153,6 +153,8 @@ class FavoriteSerializer(BaseUserRecipeSerializer):
     """Сериализатор для избранного."""
 
     class Meta:
+        """Мета класс."""
+
         model = Favorite
         fields = ('user', 'recipe')
         verbose_name = 'избранном'
@@ -162,6 +164,8 @@ class ShoppingCartSerializer(BaseUserRecipeSerializer):
     """Сериализатор для корзины покупок."""
 
     class Meta:
+        """Мета класс."""
+
         model = ShoppingCart
         fields = ('user', 'recipe')
         verbose_name = 'корзине'
