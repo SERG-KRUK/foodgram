@@ -129,7 +129,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 class BaseUserRecipeSerializer(serializers.ModelSerializer):
     """Базовый сериализатор для связей пользователь-рецепт."""
-    
+
     def validate(self, data):
         """Проверяет, что рецепт еще не добавлен."""
         if self.Meta.model.objects.filter(
@@ -141,7 +141,7 @@ class BaseUserRecipeSerializer(serializers.ModelSerializer):
                 f'Рецепт уже в {verbose_name}'
             )
         return data
-    
+
     def to_representation(self, instance):
         """Преобразует объект в словарь для ответа API."""
         request = self.context.get('request')
