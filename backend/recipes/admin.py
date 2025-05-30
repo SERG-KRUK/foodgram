@@ -36,7 +36,7 @@ class UserAdmin(BaseUserAdmin):
     @display(description='Подписчиков')
     def subscribers_count(self, obj):
         """Метод количества подписчиков."""
-        return obj.following.count()
+        return obj.subscriptions_to_author.count()
 
 
 class RecipeIngredientInline(admin.TabularInline):

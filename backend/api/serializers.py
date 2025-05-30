@@ -38,7 +38,8 @@ class UserSerializer(BaseUserSerializer):
         """Метод для подписок."""
         request = self.context.get('request')
         return (request and request.user.is_authenticated
-                and obj.following.filter(user=request.user).exists())
+                and obj.subscriptions_to_author.filter(
+                    user=request.user).exists())
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -126,42 +127,44 @@ class RecipeSerializer(serializers.ModelSerializer):
                 and obj.shoppingcart_set.filter(user=request.user).exists())
 
 
-class FavoriteSerializer(serializers.ModelSerializer):
+class BaseUserRecipeSerializer(serializers.ModelSerializer):
+    """Базовый сериализатор для связей пользователь-рецепт."""
+    
+    def validate(self, data):
+        """Проверяет, что рецепт еще не добавлен."""
+        if self.Meta.model.objects.filter(
+            user=data['user'],
+            recipe=data['recipe']
+        ).exists():
+            verbose_name = self.Meta.model._meta.verbose_name
+            raise serializers.ValidationError(
+                f'Рецепт уже в {verbose_name}'
+            )
+        return data
+    
+    def to_representation(self, instance):
+        """Преобразует объект в словарь для ответа API."""
+        request = self.context.get('request')
+        context = {'request': request}
+        return ShortRecipeSerializer(instance.recipe, context=context).data
+
+
+class FavoriteSerializer(BaseUserRecipeSerializer):
     """Сериализатор для избранного."""
 
     class Meta:
-        """Мета для избранного."""
-
         model = Favorite
         fields = ('user', 'recipe')
-
-    def validate(self, data):
-        """Валидация для избранного."""
-        if Favorite.objects.filter(
-            user=data['user'],
-            recipe=data['recipe']
-        ).exists():
-            raise serializers.ValidationError('Рецепт уже в избранном')
-        return data
+        verbose_name = 'избранном'
 
 
-class ShoppingCartSerializer(serializers.ModelSerializer):
+class ShoppingCartSerializer(BaseUserRecipeSerializer):
     """Сериализатор для корзины покупок."""
 
     class Meta:
-        """Мета для корзины покупок."""
-
         model = ShoppingCart
         fields = ('user', 'recipe')
-
-    def validate(self, data):
-        """Валидация для корзины покупок."""
-        if ShoppingCart.objects.filter(
-            user=data['user'],
-            recipe=data['recipe']
-        ).exists():
-            raise serializers.ValidationError('Рецепт уже в корзине')
-        return data
+        verbose_name = 'корзине'
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
@@ -240,10 +243,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     def validate_ingredients(self, value):
         """Валидация ингредиентов."""
-        if not value or len(value) == 0:
-            raise serializers.ValidationError(
-                'Должен быть выбран хотя бы один ингредиент'
-            )
         ingredient_ids = [ingredient['id'] for ingredient in value]
         if len(ingredient_ids) != len(set(ingredient_ids)):
             raise serializers.ValidationError(

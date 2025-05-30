@@ -57,7 +57,7 @@ class UserViewSet(DjoserUserViewSet):
     def subscriptions(self, request):
         """Список подписок с пагинацией."""
         authors = User.objects.filter(
-            following__user=request.user
+            subscriptions_to_author__user=request.user
         ).annotate(
             recipes_count=Count('recipes')
         ).prefetch_related('recipes').order_by('username')
@@ -182,12 +182,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def _handle_favorite_shopping_delete(self, model, request, pk):
         """Общий метод для удаления из избранного/корзины."""
-        deleted = model.objects.filter(
+        deleted_count, _ = model.objects.filter(
             user=request.user,
             recipe_id=pk
-        ).delete()[0]
+        ).delete()
+
         return Response(
-            status=status.HTTP_204_NO_CONTENT if deleted
+            status=status.HTTP_204_NO_CONTENT if deleted_count
             else status.HTTP_400_BAD_REQUEST
         )
 
@@ -229,8 +230,18 @@ class RecipeViewSet(viewsets.ModelViewSet):
             ShoppingCart, request, pk
         )
 
-    @action(detail=False, methods=('get',), permission_classes=(
-            IsAuthenticated,))
+    @staticmethod
+    def _generate_shopping_list_text(ingredients):
+        return '\n'.join(
+            f"{item['ingredient__name']} "
+            f"({item['ingredient__measurement_unit']}) - "
+            f"{item['total_amount']}"
+            for item in ingredients
+        )
+
+    @action(
+        detail=False, methods=('get',),
+        permission_classes=(IsAuthenticated,))
     def download_shopping_cart(self, request):
         """Скачивает список покупок в виде текстового файла."""
         ingredients = RecipeIngredient.objects.filter(
@@ -240,17 +251,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
             'ingredient__measurement_unit'
         ).annotate(total_amount=Sum('amount')).order_by('ingredient__name')
 
-        shopping_list = [
-            f"{item['ingredient__name']} "
-            f"({item['ingredient__measurement_unit']}) - "
-            f"{item['total_amount']}"
-            for item in ingredients
-        ]
-
         response = FileResponse(
-            '\n'.join(shopping_list), content_type='text/plain')
-        response['Content-Disposition'] = (
-            'attachment; filename="shopping_list.txt"')
+            self._generate_shopping_list_text(ingredients),
+            content_type='text/plain',
+            as_attachment=True,
+            filename='shopping_list.txt'
+        )
         return response
 
     @action(
