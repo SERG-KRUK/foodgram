@@ -36,10 +36,12 @@ class UserSerializer(BaseUserSerializer):
 
     def get_is_subscribed(self, obj):
         """Метод для подписок."""
-        request = self.context.get('request')
-        return (request and request.user.is_authenticated
-                and obj.subscriptions_to_author.filter(
-                    user=request.user).exists())
+        return (
+            self.context.get('request')
+            and self.context['request'].user.is_authenticated
+            and obj.subscriptions_to_author.filter(
+                user=self.context['request'].user).exists()
+        )
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -116,15 +118,21 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def get_is_favorited(self, obj):
         """Метод для избранного."""
-        request = self.context.get('request')
-        return (request and request.user.is_authenticated
-                and obj.favorite_set.filter(user=request.user).exists())
+        return (
+            self.context.get('request') 
+            and self.context['request'].user.is_authenticated
+            and obj.favorite_set.filter(
+                user=self.context['request'].user).exists()
+        )
 
     def get_is_in_shopping_cart(self, obj):
         """Метод для корзины покупок."""
-        request = self.context.get('request')
-        return (request and request.user.is_authenticated
-                and obj.shoppingcart_set.filter(user=request.user).exists())
+        return (
+            self.context.get('request')
+            and self.context['request'].user.is_authenticated
+            and obj.shoppingcart_set.filter(
+                user=self.context['request'].user).exists()
+        )
 
 
 class BaseUserRecipeSerializer(serializers.ModelSerializer):
@@ -144,9 +152,8 @@ class BaseUserRecipeSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         """Преобразует объект в словарь для ответа API."""
-        request = self.context.get('request')
-        context = {'request': request}
-        return ShortRecipeSerializer(instance.recipe, context=context).data
+        return ShortRecipeSerializer(
+            instance.recipe, context=self.context).data
 
 
 class FavoriteSerializer(BaseUserRecipeSerializer):
@@ -247,6 +254,10 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     def validate_ingredients(self, value):
         """Валидация ингредиентов."""
+        if not value:
+            raise serializers.ValidationError(
+                'Должен быть выбран хотя бы один ингредиент'
+            )
         ingredient_ids = [ingredient['id'] for ingredient in value]
         if len(ingredient_ids) != len(set(ingredient_ids)):
             raise serializers.ValidationError(

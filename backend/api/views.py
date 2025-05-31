@@ -18,6 +18,7 @@ from recipes.models import (
     Favorite,
     Ingredient,
     Recipe,
+    LinkMapped,
     RecipeIngredient,
     ShoppingCart,
     Subscription,
@@ -123,8 +124,8 @@ class UserViewSet(DjoserUserViewSet):
     def delete_avatar(self, request):
         """Удаление аватара текущего пользователя."""
         user = request.user
-        if user.avatar.delete():
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        user.avatar.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -233,9 +234,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @staticmethod
     def _generate_shopping_list_text(ingredients):
         return '\n'.join(
-            f"{item['ingredient__name']} "
-            f"({item['ingredient__measurement_unit']}) - "
-            f"{item['total_amount']}"
+            f'{item["ingredient__name"]} '
+            f'({item["ingredient__measurement_unit"]}) - '
+            f'{item["total_amount"]}'
             for item in ingredients
         )
 
@@ -271,9 +272,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if not recipe.short_link:
             recipe.short_link = generate_hash()
             recipe.save()
-        short_link_url = reverse(
-            'recipe-by-short-link', kwargs={'short_link': recipe.short_link}
+            LinkMapped.objects.create(
+                url_hash=recipe.short_link,
+                original_url=reverse('recipe-detail', kwargs={'pk': recipe.pk})
+            )
+        short_url = request.build_absolute_uri(
+            reverse(
+                'recipe-short-link', kwargs={'short_link': recipe.short_link})
         )
-        return Response({
-            'short-link': request.build_absolute_uri(short_link_url)
-        })
+        return Response({'short-link': short_url})

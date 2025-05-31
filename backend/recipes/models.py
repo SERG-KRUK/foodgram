@@ -239,7 +239,7 @@ class RecipeIngredient(models.Model):
 
     def __str__(self):
         """Возвращает строковое представление связи рецепта и ингредиента."""
-        return f"{self.recipe}: {self.ingredient} - {self.amount}"
+        return f'{self.recipe}: {self.ingredient} - {self.amount}'
 
 
 class BaseUserRecipeRelation(models.Model):
@@ -300,13 +300,13 @@ class Subscription(models.Model):
         User,
         on_delete=models.CASCADE,
         related_name='user_subscriptions',
-        verbose_name='подписки пользователя'
+        verbose_name='пользователь'
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='subscriptions_to_author',
-        verbose_name='подписки на автора'
+        verbose_name='автор'
     )
 
     class Meta:
