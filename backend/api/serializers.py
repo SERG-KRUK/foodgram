@@ -119,7 +119,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     def get_is_favorited(self, obj):
         """Метод для избранного."""
         return (
-            self.context.get('request') 
+            self.context.get('request')
             and self.context['request'].user.is_authenticated
             and obj.favorite_set.filter(
                 user=self.context['request'].user).exists()
